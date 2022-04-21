@@ -1,3 +1,7 @@
+# Model & Data files
+*.h5
+*.npy
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
