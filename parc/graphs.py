@@ -22,26 +22,7 @@ def visualizeInference(
     """
 
 
-def plot_rmse(Prediction,gradient):
-    #calculate RMSE for each sample
-    all_rmse = []
-    for i in range(9):
-        rmse_list = []
-        r2_list = []
-        for j in range(19):
-            rmse = sqrt(mean_squared_error(gradient[i,:,:,j].flatten(), Prediction[i,:,:,j].flatten()))        
-            rmse_list.append(rmse)
-        
-        all_rmse.append(np.array(rmse_list))    
-    all_rmse = np.array(all_rmse)
-
-    #mean of the RMSE values
-    all_rmse_mean = np.mean(all_rmse,axis=0)
-
-    #total RMSE value
-    rmse_all = sqrt(mean_squared_error(gradient[:,:,:,:].flatten(), Prediction[:,:,:,:].flatten()))
-    print(rmse_all)
-
+def plot_rmse(all_rmse):
     #Root mean squared error plot
     sample_name = 'RMSE'
     plt.figure(figsize=[17,4])
@@ -60,23 +41,7 @@ def plot_rmse(Prediction,gradient):
     return None
 
 
-def plot_r2(Prediction,gradient):
-    #calculate r^2 for sample
-    all_r2 = []
-    for i in range(9):
-        r2_list = []
-        for j in range(19):
-            r2 = r2_score(gradient[i,:,:,j].flatten(),Prediction[i,:,:,j].flatten())
-            r2_list.append(r2)
-        all_r2.append(np.array(r2_list))
-    all_r2 = np.array(all_r2)
-
-    #mean of the r^2 values
-    all_r2_mean = np.mean(all_r2,axis=0)
-
-    #total r^2 score
-    r2_all = r2_score(gradient.flatten(),Prediction.flatten())
-    
+def plot_r2(all_r2):
     #R^2 score plot
     sample_name = 'R2'
     plt.figure(figsize=[17,4])
