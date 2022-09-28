@@ -3,3 +3,5 @@ Pillow
 pandas
 matplotlib
 scikit-image
+tensorflow
+keras

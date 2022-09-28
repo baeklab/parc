@@ -61,7 +61,7 @@ def plot_r2(all_r2):
     return None
 
 
-def plot_sensitivity_area(Prediction,gradient):
+def plot_sensitivity_area(y_true, y_pred):
     #single sample sensitivity calculation for temperature
     def sensitivity_single_sample(test_data):
         threshold = 0.1554 #875 Temperature(K)
@@ -107,7 +107,7 @@ def plot_sensitivity_area(Prediction,gradient):
 
         return area_mean,area_error1,area_error2,gt_area_mean,gt_area_error1,gt_area_error2
    
-    area_mean,area_error1,area_error2,gt_area_mean,gt_area_error1,gt_area_error2 = Calculate_avg_sensitivity(Prediction[:,:,:,1:],gradient[:,:,:,1:])
+    area_mean,area_error1,area_error2,gt_area_mean,gt_area_error1,gt_area_error2 = Calculate_avg_sensitivity(y_pred[:,:,:,1:],y_true[:,:,:,1:])
     
     #Average hotspot area rate of change
     x_num = np.array([4.74,5.53,6.32,7.11,7.9,8.69,9.48,10.27,11.06,11.85,12.64,13.43,14.22,15.01])
@@ -132,7 +132,7 @@ def plot_sensitivity_area(Prediction,gradient):
     return None
 
 
-def plot_sensitivity_temperature(Prediction,gradient):
+def plot_sensitivity_temperature(y_true, y_pred):
     #single sample sensitivity calculation for temperature
     def sensitivity_single_sample(test_data):
         threshold = 0.1554 #875 Temperature(K)
@@ -187,7 +187,7 @@ def plot_sensitivity_temperature(Prediction,gradient):
         
         return temp_mean,temp_error1,temp_error2,gt_temp_mean,gt_temp_error1,gt_temp_error2
 
-    temp_mean,temp_error1,temp_error2,gt_temp_mean,gt_temp_error1,gt_temp_error2 = Calculate_avg_sensitivity(Prediction[:,:,:,1:],gradient[:,:,:,1:])
+    temp_mean,temp_error1,temp_error2,gt_temp_mean,gt_temp_error1,gt_temp_error2 = Calculate_avg_sensitivity(y_pred[:,:,:,1:],y_true[:,:,:,1:])
     
     #Average hotspot temperature rate of change
     x_num = np.array([4.74,5.53,6.32,7.11,7.9,8.69,9.48,10.27,11.06,11.85,12.64,13.43,14.22,15.01])
@@ -211,5 +211,19 @@ def plot_sensitivity_temperature(Prediction,gradient):
 
     return None
 
-def plot_saliency():
+def plot_saliency(y_pred):
+    norm_T_max = 4000
+    norm_T_min = 300
+    threshold = 875 #875 Temperature(K)
+
+    pred_data = np.squeeze(y_pred[0][1,:,:,22])
+    pred_data = (pred_data+1.0)/2.0
+    pred_data = (pred_data*(norm_T_max-norm_T_min))+norm_T_min
+    pred_mask = pred_data>threshold
+
+    plt.imshow(np.squeeze(pred_mask), cmap='RdGy_r', vmin = -0.0, vmax = 1.0)
+    ax = plt.gca()
+    ax.set_xticks([])
+    ax.set_yticks([])
+
     return None
