@@ -1,7 +1,6 @@
 numpy
 Pillow
 pandas
-sklearn
 math
 matplotlib
 scikit-image

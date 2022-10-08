@@ -3,7 +3,7 @@ from parc import IO
 from parc import losses
 import keras
 
-
+IO.parseData("data/raw")
 x_tn, y_tn, x_val, y_val, x_tt, y_tt = IO.getData(
     data_dir="path/to/dataset", splits=[0.8, 0.1, 0.1]
 )
