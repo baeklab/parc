@@ -4,7 +4,7 @@ from sklearn.metrics import mean_squared_error, r2_score
 import tensorflow as tf
 import keras.backend as K
 
-def calculate_rmse(y_true, y_pred):
+def rmse(y_true, y_pred):
     all_rmse = []
     for i in range(9):
         rmse_list = []
@@ -17,7 +17,7 @@ def calculate_rmse(y_true, y_pred):
     
     return all_rmse
 
-def calculate_r2(y_true, y_pred):
+def r2(y_true, y_pred):
     all_r2 = []
     for i in range(9):
         r2_list = []
