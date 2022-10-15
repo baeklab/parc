@@ -4,12 +4,15 @@ from sklearn.metrics import mean_squared_error, r2_score
 import tensorflow as tf
 import keras.backend as K
 
+case_numbers = 1
+time_steps = 20
+
 def rmse(y_true, y_pred):
     all_rmse = []
-    for i in range(9):
+    for i in range(case_numbers):
         rmse_list = []
-        for j in range(19):
-            rmse = sqrt(mean_squared_error(y_true[i,:,:,j].flatten(), y_pred[i,:,:,j].flatten()))        
+        for j in range(time_steps-1):
+            rmse = sqrt(mean_squared_error(y_true[i,:,:,j,:].flatten(), y_pred[i,:,:,j,:].flatten()))        
             rmse_list.append(rmse)
         
         all_rmse.append(np.array(rmse_list))    
@@ -19,10 +22,10 @@ def rmse(y_true, y_pred):
 
 def r2(y_true, y_pred):
     all_r2 = []
-    for i in range(9):
+    for i in range(case_numbers):
         r2_list = []
-        for j in range(19):
-            r2 = r2_score(y_true[i,:,:,j].flatten(),y_pred[i,:,:,j].flatten())
+        for j in range(time_steps-1):
+            r2 = r2_score(y_true[i,:,:,j,:].flatten(),y_pred[i,:,:,j,:].flatten())
             r2_list.append(r2)
         all_r2.append(np.array(r2_list))
     all_r2 = np.array(all_r2)
@@ -91,20 +94,21 @@ def step_weighted_physical_loss(y_true, y_pred):
     return loss
 
 def state_weighted_loss(y_true, y_pred):
-  # Temperature loss
-  t_pred = y_pred[:,:,:,0::2]
-  t_true = y_true[:,:,:,0::2]
-  mse_temp =  tf.reduce_mean(tf.square(t_true - t_pred),axis = 3)
-  print('temp loss: ', mse_temp)
+    # Temperature loss
+    t_pred = y_pred[:,:,:,:,0]
+    t_true = y_true[:,:,:,:,0]
+    mse_temp =  tf.reduce_mean(tf.square(t_true - t_pred),axis = 3)
+    print('temp loss: ', mse_temp)
 
-  # Pressure loss
-  p_pred = y_pred[:,:,:,1::2]
-  p_true = y_true[:,:,:,1::2]
-  mse_press =  10*tf.reduce_mean(tf.square(p_true - p_pred),axis = 3)
-  print('pressure loss: ', mse_press)
-  # Final loss
-  squared_sum = (mse_temp + mse_press)
+    # Pressure loss
+    p_pred = y_pred[:,:,:,:,1]
+    p_true = y_true[:,:,:,:,1]
+    mse_press =  10*tf.reduce_mean(tf.square(p_true - p_pred),axis = 3)
+    print('pressure loss: ', mse_press)
+    
+    # Final loss
+    squared_sum = (mse_temp + mse_press)
 
-  loss = tf.reduce_mean(squared_sum, axis = 1)
-  loss = tf.reduce_mean(squared_sum, axis = 1)
-  return loss
+    loss = tf.reduce_mean(squared_sum, axis = 1)
+    loss = tf.reduce_mean(squared_sum, axis = 1)
+    return loss

@@ -4,7 +4,7 @@ from PIL import Image
 import cv2
 import skimage
 
-def parseData(file_name: str) -> np.ndarray:
+def parseData(file_name: str, input_img_size: int, case_numbers: int, time_steps: int, del_t: int) -> np.ndarray:
     """parse the raw data and return numpy arrays with microstructure images and temp/pressure outputs
 
     Args:
@@ -14,12 +14,6 @@ def parseData(file_name: str) -> np.ndarray:
         microstructure_data (np.ndarray): microstructure data
         output_data (np.ndarray): temp/pressure/temperature_dot/pressure_dot outputs
     """
-    
-    #adaptable variables
-    input_img_size = 485
-    case_numbers = 36
-    time_steps = 20
-    del_t = 0.79*(10**-9)  
     
     #initialize and format data arrays
     microstructure_data = np.zeros( (case_numbers,input_img_size,input_img_size,2) )
@@ -93,6 +87,8 @@ def parseData(file_name: str) -> np.ndarray:
     microstructure_data[:,:,:,0] = microstructure_data[:,:,:,0] >0.5
     microstructure_data = (microstructure_data*2.0)-1.0
     
+    output_data = output_data[:,:480,:480,:,:]
+    microstructure_data = microstructure_data[:,:480,:480,:]
     # downsample to half of image size
     output_data = skimage.measure.block_reduce(output_data, (1,2,2,1,1),np.max)
     microstructure_data = skimage.measure.block_reduce(microstructure_data, (1,2,2,1),np.mean)
@@ -121,6 +117,9 @@ def splitData(data_in: np.ndarray, output_data: np.ndarray, splits: list) -> np.
     train = case_numbers * splits[0]
     valid = train + (case_numbers * splits[1])
     test = valid + (case_numbers * splits[2])
+    train = int(train)
+    valid = int(valid)
+    test = int(test)
     print(train)
     print(valid)
     print(test)
@@ -144,3 +143,4 @@ def splitData(data_in: np.ndarray, output_data: np.ndarray, splits: list) -> np.
     print(test_X.shape)
     print(test_Y.shape)
     return X_train, y_train, X_val, y_val, test_X, test_Y
+
