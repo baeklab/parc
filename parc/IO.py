@@ -144,3 +144,23 @@ def splitData(data_in: np.ndarray, output_data: np.ndarray, splits: list) -> np.
     print(test_Y.shape)
     return X_train, y_train, X_val, y_val, test_X, test_Y
 
+def reshape(old_data: np.ndarray):
+    case_numbers = len(old_data)
+    case_numbers = int(case_numbers)
+    time_steps = old_data.shape[3]
+    img_size = old_data.shape[2]
+    new_data = np.zeros( (case_numbers,img_size,img_size,((time_steps*4)-2)) )
+    print("Old shape of data: ",old_data.shape)
+    
+    for case_idx in range (case_numbers):
+        for time_idx in range(time_steps):
+            new_data[case_idx,:,:,(2*time_idx)] = old_data[case_idx,:,:,time_idx,0]
+            new_data[case_idx,:,:,(2*time_idx)+1] = old_data[case_idx,:,:,time_idx,1]
+        for time_idx in range(time_steps-1):
+            new_data[case_idx,:,:,(2*time_steps)+(2*time_idx)] = old_data[case_idx,:,:,time_idx+1,2]
+            new_data[case_idx,:,:,(2*time_steps)+(2*time_idx)+1] = old_data[case_idx,:,:,time_idx+1,3]
+    
+    print("New shape of data: ",new_data.shape)
+                
+    return new_data
+    
