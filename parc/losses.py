@@ -4,10 +4,7 @@ from sklearn.metrics import mean_squared_error, r2_score
 import tensorflow as tf
 import keras.backend as K
 
-case_numbers = 1
-time_steps = 20
-
-def rmse(y_true, y_pred):
+def rmse(y_true, y_pred,case_numbers,time_steps):
     all_rmse = []
     for i in range(case_numbers):
         rmse_list = []
@@ -20,7 +17,7 @@ def rmse(y_true, y_pred):
     
     return all_rmse
 
-def r2(y_true, y_pred):
+def r2(y_true, y_pred,case_numbers,time_steps):
     all_r2 = []
     for i in range(case_numbers):
         r2_list = []
