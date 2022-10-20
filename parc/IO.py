@@ -193,6 +193,12 @@ def split_data(
     return X_train, y_train, X_val, y_val, test_X, test_Y
 
 def reshape(old_data: np.ndarray):
+    """reshapes data from new format to old (5 dimensional to 4 dimensional)
+    Args:
+        old_data (np.ndarray): output data in 5 dimensional format
+    Returns:
+        new_data (np.ndarray): output data in 4 dimensional format
+    """
     case_numbers = len(old_data)
     case_numbers = int(case_numbers)
     time_steps = old_data.shape[3]

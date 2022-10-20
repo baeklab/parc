@@ -5,6 +5,13 @@ import tensorflow as tf
 import keras.backend as K
 
 def rmse(y_true, y_pred,case_numbers,time_steps):
+    """Root mean squared error calculation between true and predicted cases 
+    Args:
+        y_true (np.ndarray): true values for temp/press found in input dataset
+        y_pred (np.ndarray): model predicted values for temp/press
+        case_numbers (int) : number of cases to calculate rmse values for
+        time_steps (int)   : number of time steps to iterate through
+    """    
     all_rmse = []
     for i in range(case_numbers):
         rmse_list = []
@@ -18,6 +25,13 @@ def rmse(y_true, y_pred,case_numbers,time_steps):
     return all_rmse
 
 def r2(y_true, y_pred,case_numbers,time_steps):
+    """R2 score calculation between true and predicted cases 
+    Args:
+        y_true (np.ndarray): true values for temp/press found in input dataset
+        y_pred (np.ndarray): model predicted values for temp/press
+        case_numbers (int) : number of cases to calculate r2 scores for
+        time_steps (int)   : number of time steps to iterate through
+    """        
     all_r2 = []
     for i in range(case_numbers):
         r2_list = []
@@ -29,15 +43,23 @@ def r2(y_true, y_pred,case_numbers,time_steps):
     
     return all_r2
 
-def step_weighted_loss(y_true, y_pred):
+def step_weighted_loss(y_true, y_pred, weight_loss):
+    """Weighted loss between true and predicted cases, weights for first six time steps are weighted 
+       with first dimension of weight_loss, the next five with the second dimension, and the final ones
+       with the third dimension
+    Args:
+        y_true (np.ndarray): true values for temp/press found in input dataset
+        y_pred (np.ndarray): model predicted values for temp/press
+        weight_loss (list[int]): initial weights, middle weights, late weights
+    """   
     # State loss
-    _squared_diff_init = 4*tf.square(y_true[:,:,:,:12] - y_pred[:,:,:,:12])
+    _squared_diff_init = weight_loss[0]*tf.square(y_true[:,:,:,:12] - y_pred[:,:,:,:12])
     squared_diff_init = tf.reduce_mean(_squared_diff_init,axis = 3)
 
-    _squared_diff_mid = 1*tf.square(y_true[:,:,:,:12:22] - y_pred[:,:,:,12:22])
+    _squared_diff_mid = weight_loss[1]*tf.square(y_true[:,:,:,:12:22] - y_pred[:,:,:,12:22])
     squared_diff_mid = tf.reduce_mean(_squared_diff_mid,axis = 3)
 
-    _squared_diff_late = tf.square(y_true[:,:,:,22:] -  y_pred[:,:,:,22:])
+    _squared_diff_late = weight_loss[2]*tf.square(y_true[:,:,:,22:] -  y_pred[:,:,:,22:])
     squared_diff_late = tf.reduce_mean(_squared_diff_late,axis = 3)
     squared_sum = (squared_diff_init + squared_diff_mid + squared_diff_late)
 
@@ -47,6 +69,11 @@ def step_weighted_loss(y_true, y_pred):
     return loss_cv
 
 def step_weighted_physical_loss(y_true, y_pred):
+    """calculates physical loss using weighted steps
+    Args:
+        y_true (np.ndarray): true values for temp/press found in input dataset
+        y_pred (np.ndarray): model predicted values for temp/press
+    """    
     # State loss
     _squared_diff_init = 12*tf.square(y_true[:,:,:,:12] - y_pred[:,:,:,:12])
     squared_diff_init = tf.reduce_mean(_squared_diff_init,axis = 3)
@@ -91,6 +118,11 @@ def step_weighted_physical_loss(y_true, y_pred):
     return loss
 
 def state_weighted_loss(y_true, y_pred):
+    """calculates weighted loss for temperature and pressure states
+    Args:
+        y_true (np.ndarray): true values for temp/press found in input dataset
+        y_pred (np.ndarray): model predicted values for temp/press
+    """    
     # Temperature loss
     t_pred = y_pred[:,:,:,:,0]
     t_true = y_true[:,:,:,:,0]
