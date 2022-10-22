@@ -240,6 +240,7 @@ def parc(
         #    Tdot_output = keras.layers.concatenate([Tdot_output_sr[i+1]],axis=3)
     T_output = keras.layers.concatenate(
         [
+            T_output_sr[0],
             T_output_sr[1],
             T_output_sr[2],
             T_output_sr[3],
@@ -264,6 +265,7 @@ def parc(
 
     Tdot_output = keras.layers.concatenate(
         [
+            Tdot_output_sr[0],
             Tdot_output_sr[1],
             Tdot_output_sr[2],
             Tdot_output_sr[3],

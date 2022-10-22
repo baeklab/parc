@@ -192,28 +192,57 @@ def split_data(
     print(test_Y.shape)
     return X_train, y_train, X_val, y_val, test_X, test_Y
 
-def reshape(old_data: np.ndarray):
+def reshape_old(new_data: np.ndarray):
     """reshapes data from new format to old (5 dimensional to 4 dimensional)
     Args:
-        old_data (np.ndarray): output data in 5 dimensional format
+        new_data (np.ndarray): output data in 5 dimensional format
     Returns:
-        new_data (np.ndarray): output data in 4 dimensional format
+        old_data (np.ndarray): output data in 4 dimensional format
     """
-    case_numbers = len(old_data)
-    case_numbers = int(case_numbers)
-    time_steps = old_data.shape[3]
-    img_size = old_data.shape[2]
-    new_data = np.zeros( (case_numbers,img_size,img_size,((time_steps*4)-2)) )
-    print("Old shape of data: ",old_data.shape)
+    case_numbers = new_data.shape[0]
+    time_steps = new_data.shape[3]
+    img_size = new_data.shape[2]
+    old_data = np.zeros( (case_numbers,img_size,img_size,((time_steps*4)-2)) )
+    print("Starting shape of data: ",new_data.shape)
     
     for case_idx in range (case_numbers):
         for time_idx in range(time_steps):
-            new_data[case_idx,:,:,(2*time_idx)] = old_data[case_idx,:,:,time_idx,0]
-            new_data[case_idx,:,:,(2*time_idx)+1] = old_data[case_idx,:,:,time_idx,1]
+            old_data[case_idx,:,:,(2*time_idx)] = new_data[case_idx,:,:,time_idx,0]
+            old_data[case_idx,:,:,(2*time_idx)+1] = new_data[case_idx,:,:,time_idx,1]
         for time_idx in range(time_steps-1):
-            new_data[case_idx,:,:,(2*time_steps)+(2*time_idx)] = old_data[case_idx,:,:,time_idx+1,2]
-            new_data[case_idx,:,:,(2*time_steps)+(2*time_idx)+1] = old_data[case_idx,:,:,time_idx+1,3]
+            old_data[case_idx,:,:,(2*time_steps)+(2*time_idx)] = new_data[case_idx,:,:,time_idx+1,2]
+            old_data[case_idx,:,:,(2*time_steps)+(2*time_idx)+1] = new_data[case_idx,:,:,time_idx+1,3]
     
-    print("New shape of data: ",new_data.shape)
+    print("Reformatted data shape: ",old_data.shape)
+                
+    return old_data
+
+def reshape_new(old_data: np.ndarray,channels=4):
+    """reshapes data from old format to new (4 dimensional to 5 dimensional)
+    Args:
+        old_data (np.ndarray): output data in 4 dimensional format
+    Returns:
+        new_data (np.ndarray): output data in 5 dimensional format
+    """
+    case_numbers = old_data.shape[0]
+    time_steps = ((old_data.shape[3] + 2) / channels)
+    time_steps = int(time_steps)
+    img_size = old_data.shape[2]
+    new_data = np.zeros( (case_numbers,img_size,img_size,time_steps,channels) )
+    print("Starting shape of data: ",old_data.shape)
+    
+    for case_idx in range (case_numbers):
+        if channels == 4:
+            for time_idx in range(time_steps):
+                new_data[case_idx,:,:,time_idx,0] = old_data[case_idx,:,:,(2*time_idx)]
+                new_data[case_idx,:,:,time_idx,1] = old_data[case_idx,:,:,(2*time_idx)+1]
+            for time_idx in range(time_steps-1):
+                new_data[case_idx,:,:,time_idx+1,2] = old_data[case_idx,:,:,(2*time_steps)+(2*time_idx)]
+                new_data[case_idx,:,:,time_idx+1,3] = old_data[case_idx,:,:,(2*time_steps)+(2*time_idx)+1]
+        if channels == 2:
+            for time_idx in range(time_steps-1):
+                new_data[case_idx,:,:,time_idx+1,0] = old_data[case_idx,:,:,(2*time_idx)]
+                new_data[case_idx,:,:,time_idx+1,1] = old_data[case_idx,:,:,(2*time_idx)+1]
+    print("Reformatted data shape: ",new_data.shape)
                 
     return new_data
