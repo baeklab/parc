@@ -3,45 +3,6 @@ from math import sqrt
 from sklearn.metrics import mean_squared_error, r2_score
 import matplotlib.pyplot as plt
 
-TS = [
-    0.79,
-    1.58,
-    2.37,
-    3.16,
-    3.95,
-    4.74,
-    5.53,
-    6.32,
-    7.11,
-    7.9,
-    8.69,
-    9.48,
-    10.27,
-    11.06,
-    11.85,
-    12.64,
-    13.43,
-    14.22,
-    15.01,
-]
-TS_sensitivity = [
-    4.74,
-    5.53,
-    6.32,
-    7.11,
-    7.9,
-    8.69,
-    9.48,
-    10.27,
-    11.06,
-    11.85,
-    12.64,
-    13.43,
-    14.22,
-    15.01,
-]
-
-
 def visualize_inference(
     data_in: np.ndarray,
     data_out: np.ndarray,
@@ -53,17 +14,17 @@ def visualize_inference(
     Args:
         data_in (np.ndarray):   ground truth label
         data_out (np.ndarray):  model prediction
-        time_idx (list[int]):   list of the time index to plot. If None plot all timestep
+        time_idx (list[int]):   list of the time index to plot
         fields (list[bool]):    list of selecting which fields to plot. If None, plot all fields
     """
     # todo: missing
 
 
-def plot_rmse(all_rmse, t_idx=TS):
+def plot_rmse(all_rmse, t_idx):
     """Root mean squared error plot, plotted as boxplot
     Args:
         all_rmse : total root mean squared output from data
-        t_idx (list[int]): list of the time index to plot. If None plot all timestep
+        t_idx (list[int]): list of the time index to plot
     """
     sample_name = "RMSE"
     plt.figure(figsize=[17, 4])
@@ -75,7 +36,7 @@ def plot_rmse(all_rmse, t_idx=TS):
         showmeans=True,
         showfliers=False,
         labels=None,
-        positions=TS,
+        positions=t_idx,
     )
     for i in range(len(all_rmse)):
         plt.scatter(t_idx, all_rmse[i, :], alpha=0.4, color="b")
@@ -88,11 +49,11 @@ def plot_rmse(all_rmse, t_idx=TS):
     plt.show()
 
 
-def plot_r2(all_r2, t_idx=TS):
+def plot_r2(all_r2, t_idx):
     """R2 score plot using r2 scores calculated in losses module, plotted as a boxplot
     Args:
         all_r2 : R2 score 
-        t_idx (list[int]): list of the time index to plot. If None plot all timestep
+        t_idx (list[int]): list of the time index to plot
     """
 
     sample_name = "R2"
@@ -105,7 +66,7 @@ def plot_r2(all_r2, t_idx=TS):
         meanline=True,
         showmeans=True,
         showfliers=False,
-        positions=TS,
+        positions=t_idx,
     )
     for i in range(len(all_r2)):
         plt.scatter(t_idx, all_r2[i, :], alpha=0.4, color="b")
@@ -119,12 +80,12 @@ def plot_r2(all_r2, t_idx=TS):
     plt.show()
 
 
-def plot_sensitivity_area(y_true, y_pred, t_idx=TS_sensitivity):
+def plot_sensitivity_area(y_true, y_pred, t_idx):
     """plot of the average hotspot area rate of change used to show predicted growth
     Args:
         y_true (np.ndarray): true values for temp/press found in input dataset
         y_pred (np.ndarray): model predicted values for temp/press
-        t_idx (list[int]): list of the time index to plot. If None plot all timestep
+        t_idx (list[int]): list of the time index to plot
     """
     (
         area_mean,
@@ -155,12 +116,12 @@ def plot_sensitivity_area(y_true, y_pred, t_idx=TS_sensitivity):
     plt.savefig("area_growth_plot.png")
     plt.show()
 
-def plot_sensitivity_temperature(y_true, y_pred, t_idx=TS):
+def plot_sensitivity_temperature(y_true, y_pred, t_idx):
     """plot of the average hotspot temperature rate of change used to show predicted growth
     Args:
         y_true (np.ndarray): true values for temp found in input dataset
         y_pred (np.ndarray): model predicted values for temp
-        t_idx (list[int]): list of the time index to plot. If None plot all timestep
+        t_idx (list[int]): list of the time index to plot
     """  
     (
         temp_mean,

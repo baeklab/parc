@@ -4,45 +4,6 @@ from sklearn.metrics import mean_squared_error, r2_score
 import tensorflow as tf
 import keras.backend as K
 
-TS = [
-    0.79,
-    1.58,
-    2.37,
-    3.16,
-    3.95,
-    4.74,
-    5.53,
-    6.32,
-    7.11,
-    7.9,
-    8.69,
-    9.48,
-    10.27,
-    11.06,
-    11.85,
-    12.64,
-    13.43,
-    14.22,
-    15.01,
-]
-TS_sensitivity = [
-    4.74,
-    5.53,
-    6.32,
-    7.11,
-    7.9,
-    8.69,
-    9.48,
-    10.27,
-    11.06,
-    11.85,
-    12.64,
-    13.43,
-    14.22,
-    15.01,
-]
-
-
 def rmse(y_true, y_pred,case_numbers,time_steps):
     """Root mean squared error calculation between true and predicted cases 
     Args:
@@ -189,12 +150,11 @@ def sensitivity_single_sample(test_data):
 
     return area_list
 
-def Calculate_avg_sensitivity(y_true, y_pred, t_idx=TS):
+def Calculate_avg_sensitivity(y_true, y_pred):
     """average sensitivity calculation between prediction and true values
     Args:
         y_true (np.ndarray): true values for temp/press found in input dataset
         y_pred (np.ndarray): model predicted values for temp/press
-        t_idx (list[int]): list of the time index to plot. If None plot all timestep
     """
     
     whole_area = []
