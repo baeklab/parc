@@ -15,11 +15,13 @@ def test_parc_default():
     assert out.shape[-1] == 38
 
 
-def test_parc_adaptive1():
+def test_parc_adaptive():
     parc_adaptive_ts = model.parc(numTS=5)
     assert 17852868 == parc_adaptive_ts.count_params()
-
     img_size = 64
+    in3 = np.random.rand(
+        23, 32, 23, 1, 4, 12, 213, 123, 12, 12, 123, 1, 12, 123, 123, 12
+    )
     in1 = np.random.rand(img_size, img_size, 2)
     in2 = np.random.rand(img_size, img_size, 2)
     in1 = np.expand_dims(in1, 0)

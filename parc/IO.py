@@ -1,17 +1,24 @@
 import os
+import os.path as osp
 import numpy as np
 from PIL import Image
 import cv2
 import skimage
 
 
+# todo: input_img_size can be referred from the pgm file. Make it more adaptable
+# todo: not sure case_number is relevant for this function. This is the one-time run
+#  function where we parse the data and store them as numpy format after processing.
+#  Thus, feels like processing every possible data makes more sense to me.
+# todo: need to return the mins and maxs we used for normalizing the fields as part of the
+#  return for this function
 def parse_data(
-    file_name: str, input_img_size: int, case_numbers: int, time_steps: int, del_t: int
+    dir_data: str, input_img_size: int, case_numbers: int, time_steps: int, del_t: int
 ) -> np.ndarray:
     """parse the raw data and return numpy arrays with microstructure images and temp/pressure outputs
 
     Args:
-        file_name (str) : file name of raw data
+        dir_data (str) : root directory for data set
         input_img_size (int) : pixel size of square input image
         case_numbers (int) : number of cases in the data set
         time_steps (int) : number of time steps used
@@ -19,11 +26,13 @@ def parse_data(
 
     Returns:
         microstructure_data (np.ndarray) : microstructure data
-        output_data (np.ndarray) : temp/pressure/temperature_dot/pressure_dot outputs
+        output_data (np.ndarray) : fields (e.g., temp, pressure) and change of fields (e.g., temp_dot, pres_dot)
     """
 
     # initialize and format data arrays
-    microstructure_data = np.zeros((case_numbers, input_img_size, input_img_size, 2))
+    microstructure_data = np.zeros(
+        (case_numbers, input_img_size, input_img_size, 2)
+    )  # [0: microstructure, 1: distance map]
     output_data = np.zeros(
         (case_numbers, input_img_size, input_img_size, time_steps, 4)
     )  # output dimension 5 shape: [0:T,1:P,2:T_dot,3:P_dot]
@@ -32,30 +41,28 @@ def parse_data(
     # Size of the map is same as the original microsturcture image size (485x485)
     wave_map = np.zeros((input_img_size, input_img_size))
     for w in range(1, input_img_size):
-        wave_map[:, w] = w / 485.0
+        wave_map[:, w] = (
+            w / 485.0
+        )  # todo: only for our problem at the moment, make it adaptable
 
-    # There are currenly 36 samples that can be used
+    # todo: need to determine how we expect the data.
+    # iterate over cases
     for case_idx in range(1, case_numbers + 1):
 
         # Load Original Microstructure Image
-        original_img = (
-            "./"
-            + file_name
-            + "/microstructures/data_"
-            + str(format(case_idx, "02d"))
-            + ".pgm"
+        img_raw = osp.join(
+            dir_data, "microstructures", "data_" + str(format(case_idx, "02d")) + ".pgm"
         )
-        x = cv2.imread(original_img)
-        ori_img = x[:, :, 1]
+        img = cv2.imread(img_raw)
+        img = img[:, :, 1]
 
         # Combine Microstructure image and distance map
-        microstructure_data[:, :, :, 0] = ori_img
+        microstructure_data[:, :, :, 0] = img
         microstructure_data[:, :, :, 1] = wave_map
 
-        # load temp and pressure values, clip, and add to output array
+        # iterate over timestep for the fields:
         for time_idx in range(0, time_steps):
-            # initial time step temp and pressure values
-            if time_idx == 0:
+            if time_idx == 0:  # initial field condition at T0
                 temp = np.full((input_img_size, input_img_size), 300.0)
                 output_data[case_idx - 1, :, :, time_idx, 0] = temp
                 press = np.full((input_img_size, input_img_size), 0)
@@ -75,17 +82,17 @@ def parse_data(
                 temp = np.clip(temp, 300, 4000)
                 output_data[case_idx - 1, :, :, time_idx, 0] = temp
 
-                pressure_name = (
-                    "./data/raw/pressures/data_"
-                    + str(format(case_idx, "02d"))
-                    + "/pres_"
-                    + str(format(time_idx, "02d"))
-                    + ".txt"
+                dir_pressure = osp.join(
+                    "data/raw/pressures/",
+                    "data_" + str(format(case_idx, "02d")),
+                    "pres_" + str(format(time_idx, "02d")) + ".txt",
                 )
-                pressure_img = np.loadtxt(pressure_name)
+
+                pressure_img = np.loadtxt(dir_pressure)
                 # reshape pressure values to image size
-                press = np.reshape(pressure_img, (input_img_size, input_img_size))
-                output_data[case_idx - 1, :, :, time_idx, 1] = press
+                pressure = np.reshape(pressure_img, (input_img_size, input_img_size))
+                output_data[case_idx - 1, :, :, time_idx, 1] = pressure
+
                 # Calculate T_dot --> T_dot = (T(t+del_t)-T(t))/del_t
                 Tdot = (
                     output_data[case_idx - 1, :, :, time_idx, 0]
@@ -97,11 +104,12 @@ def parse_data(
                 )
                 Tdot = Tdot / del_t
                 Pdot = Pdot / del_t
+
                 # Save Tdot and Pdot into output data array
                 output_data[case_idx - 1, :, :, time_idx, 2] = Tdot
                 output_data[case_idx - 1, :, :, time_idx, 3] = Pdot
 
-    # Normalize temp,press,tdot,pdot values to range [-1,1]
+    # Normalize fields to range [-1,1]
     for channel in range(0, 4):
         # Normalize Temperature to range [-1,1]
         norm_max = np.amax(output_data[:, :, :, :, channel])
@@ -132,6 +140,7 @@ def parse_data(
 
     output_data = output_data[:, :480, :480, :, :]
     microstructure_data = microstructure_data[:, :480, :480, :]
+
     # downsample to half of image size
     output_data = skimage.measure.block_reduce(output_data, (1, 2, 2, 1, 1), np.max)
     microstructure_data = skimage.measure.block_reduce(
@@ -147,6 +156,7 @@ def parse_data(
     return microstructure_data, output_data
 
 
+# todo: not sure if we need this,
 def split_data(
     data_in: np.ndarray, output_data: np.ndarray, splits: list
 ) -> np.ndarray:
@@ -192,6 +202,7 @@ def split_data(
     print(test_Y.shape)
     return X_train, y_train, X_val, y_val, test_X, test_Y
 
+
 def reshape_old(new_data: np.ndarray):
     """reshapes data from new format to old (5 dimensional to 4 dimensional)
     Args:
@@ -202,22 +213,31 @@ def reshape_old(new_data: np.ndarray):
     case_numbers = new_data.shape[0]
     time_steps = new_data.shape[3]
     img_size = new_data.shape[2]
-    old_data = np.zeros( (case_numbers,img_size,img_size,((time_steps*4)-2)) )
-    print("Starting shape of data: ",new_data.shape)
-    
-    for case_idx in range (case_numbers):
+    old_data = np.zeros((case_numbers, img_size, img_size, ((time_steps * 4) - 2)))
+    print("Starting shape of data: ", new_data.shape)
+
+    for case_idx in range(case_numbers):
         for time_idx in range(time_steps):
-            old_data[case_idx,:,:,(2*time_idx)] = new_data[case_idx,:,:,time_idx,0]
-            old_data[case_idx,:,:,(2*time_idx)+1] = new_data[case_idx,:,:,time_idx,1]
-        for time_idx in range(time_steps-1):
-            old_data[case_idx,:,:,(2*time_steps)+(2*time_idx)] = new_data[case_idx,:,:,time_idx+1,2]
-            old_data[case_idx,:,:,(2*time_steps)+(2*time_idx)+1] = new_data[case_idx,:,:,time_idx+1,3]
-    
-    print("Reformatted data shape: ",old_data.shape)
-                
+            old_data[case_idx, :, :, (2 * time_idx)] = new_data[
+                case_idx, :, :, time_idx, 0
+            ]
+            old_data[case_idx, :, :, (2 * time_idx) + 1] = new_data[
+                case_idx, :, :, time_idx, 1
+            ]
+        for time_idx in range(time_steps - 1):
+            old_data[case_idx, :, :, (2 * time_steps) + (2 * time_idx)] = new_data[
+                case_idx, :, :, time_idx + 1, 2
+            ]
+            old_data[case_idx, :, :, (2 * time_steps) + (2 * time_idx) + 1] = new_data[
+                case_idx, :, :, time_idx + 1, 3
+            ]
+
+    print("Reformatted data shape: ", old_data.shape)
+
     return old_data
 
-def reshape_new(old_data: np.ndarray,channels=4):
+
+def reshape_new(old_data: np.ndarray, channels=4):
     """reshapes data from old format to new (4 dimensional to 5 dimensional)
     Args:
         old_data (np.ndarray): output data in 4 dimensional format
@@ -225,24 +245,36 @@ def reshape_new(old_data: np.ndarray,channels=4):
         new_data (np.ndarray): output data in 5 dimensional format
     """
     case_numbers = old_data.shape[0]
-    time_steps = ((old_data.shape[3] + 2) / channels)
+    time_steps = (old_data.shape[3] + 2) / channels
     time_steps = int(time_steps)
     img_size = old_data.shape[2]
-    new_data = np.zeros( (case_numbers,img_size,img_size,time_steps,channels) )
-    print("Starting shape of data: ",old_data.shape)
-    
-    for case_idx in range (case_numbers):
+    new_data = np.zeros((case_numbers, img_size, img_size, time_steps, channels))
+    print("Starting shape of data: ", old_data.shape)
+
+    for case_idx in range(case_numbers):
         if channels == 4:
             for time_idx in range(time_steps):
-                new_data[case_idx,:,:,time_idx,0] = old_data[case_idx,:,:,(2*time_idx)]
-                new_data[case_idx,:,:,time_idx,1] = old_data[case_idx,:,:,(2*time_idx)+1]
-            for time_idx in range(time_steps-1):
-                new_data[case_idx,:,:,time_idx+1,2] = old_data[case_idx,:,:,(2*time_steps)+(2*time_idx)]
-                new_data[case_idx,:,:,time_idx+1,3] = old_data[case_idx,:,:,(2*time_steps)+(2*time_idx)+1]
+                new_data[case_idx, :, :, time_idx, 0] = old_data[
+                    case_idx, :, :, (2 * time_idx)
+                ]
+                new_data[case_idx, :, :, time_idx, 1] = old_data[
+                    case_idx, :, :, (2 * time_idx) + 1
+                ]
+            for time_idx in range(time_steps - 1):
+                new_data[case_idx, :, :, time_idx + 1, 2] = old_data[
+                    case_idx, :, :, (2 * time_steps) + (2 * time_idx)
+                ]
+                new_data[case_idx, :, :, time_idx + 1, 3] = old_data[
+                    case_idx, :, :, (2 * time_steps) + (2 * time_idx) + 1
+                ]
         if channels == 2:
-            for time_idx in range(time_steps-1):
-                new_data[case_idx,:,:,time_idx+1,0] = old_data[case_idx,:,:,(2*time_idx)]
-                new_data[case_idx,:,:,time_idx+1,1] = old_data[case_idx,:,:,(2*time_idx)+1]
-    print("Reformatted data shape: ",new_data.shape)
-                
+            for time_idx in range(time_steps - 1):
+                new_data[case_idx, :, :, time_idx + 1, 0] = old_data[
+                    case_idx, :, :, (2 * time_idx)
+                ]
+                new_data[case_idx, :, :, time_idx + 1, 1] = old_data[
+                    case_idx, :, :, (2 * time_idx) + 1
+                ]
+    print("Reformatted data shape: ", new_data.shape)
+
     return new_data
