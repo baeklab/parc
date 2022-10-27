@@ -150,15 +150,16 @@ def sensitivity_single_sample(test_data):
 
     return area_list
 
-def Calculate_avg_sensitivity(y_true, y_pred):
+def Calculate_avg_sensitivity(y_true, y_pred,tot_cases):
     """average sensitivity calculation between prediction and true values
     Args:
         y_true (np.ndarray): true values for temp/press found in input dataset
         y_pred (np.ndarray): model predicted values for temp/press
+        tot_cases (int) : number of cases tested
     """
     
     whole_area = []
-    for i in range(8):
+    for i in range(tot_cases):
         area_gt_list = sensitivity_single_sample(y_pred[i, :, :, :])
         whole_area.append(area_gt_list)
 
@@ -171,7 +172,7 @@ def Calculate_avg_sensitivity(y_true, y_pred):
 
     gt_whole_area = []
 
-    for i in range(8):
+    for i in range(tot_cases):
         area_pred_list = sensitivity_single_sample(y_true[i, :, :, :])
         gt_whole_area.append(area_pred_list)
     gt_whole_area = np.array(gt_whole_area)
