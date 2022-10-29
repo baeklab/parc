@@ -4,6 +4,7 @@ from sklearn.metrics import mean_squared_error, r2_score
 import matplotlib.pyplot as plt
 from parc import losses
 
+
 def visualize_inference(
     y_true: np.ndarray,
     y_pred: np.ndarray,
@@ -18,22 +19,25 @@ def visualize_inference(
         time_idx (list[int]):  list of the time index to plot
         case_num (int):        case number to visualize prediction
     """
-    fig,ax = plt.subplots(2,len(time_idx), figsize=(28, 8) )
-    plt.subplots_adjust(wspace=0.02, 
-                        hspace=0.04)
-    for i in range (len(time_idx)):
-        #Prediction graph
+    fig, ax = plt.subplots(2, len(time_idx), figsize=(28, 8))
+    plt.subplots_adjust(wspace=0.02, hspace=0.04)
+    for i in range(len(time_idx)):
+        # Prediction graph
         ax[0][i].clear()
         ax[0][i].clear()
         ax[0][i].set_xticks([])
         ax[0][i].set_yticks([])
-        ax[0][i].imshow(np.squeeze(y_true[case_num,:,:,(i)]), cmap='jet',vmin=-1,vmax=1)
-        #Ground truth graph
+        ax[0][i].imshow(
+            np.squeeze(y_true[case_num, :, :, (i)]), cmap="jet", vmin=-1, vmax=1
+        )
+        # Ground truth graph
         ax[1][i].set_xticks([])
         ax[1][i].set_yticks([])
-        ax[1][i].imshow(np.squeeze(y_pred[case_num,:,:,(i)]), cmap='jet',vmin=-1,vmax=1)
+        ax[1][i].imshow(
+            np.squeeze(y_pred[case_num, :, :, (i)]), cmap="jet", vmin=-1, vmax=1
+        )
     plt.show()
-    
+
 
 def plot_rmse(all_rmse, t_idx):
     """Root mean squared error plot, plotted as boxplot
@@ -55,7 +59,7 @@ def plot_rmse(all_rmse, t_idx):
     )
     for i in range(len(all_rmse)):
         plt.scatter(t_idx, all_rmse[i, :], alpha=0.4, color="b")
-        
+
     # Add labels and title
     plt.title(sample_name)
     plt.xlabel("ns")
@@ -67,7 +71,7 @@ def plot_rmse(all_rmse, t_idx):
 def plot_r2(all_r2, t_idx):
     """R2 score plot using r2 scores calculated in losses module, plotted as a boxplot
     Args:
-        all_r2 : R2 score 
+        all_r2 : R2 score
         t_idx (list[int]): list of the time index to plot
     """
 
@@ -109,7 +113,9 @@ def plot_sensitivity_area(y_true, y_pred, t_idx, tot_cases):
         gt_area_mean,
         gt_area_error1,
         gt_area_error2,
-    ) = losses.Calculate_avg_sensitivity(y_pred[:, :, :, 1:], y_true[:, :, :, 1:], tot_cases)
+    ) = losses.Calculate_avg_sensitivity(
+        y_pred[:, :, :, 1:], y_true[:, :, :, 1:], tot_cases
+    )
 
     plt.figure(figsize=(6, 4))
 
@@ -131,13 +137,14 @@ def plot_sensitivity_area(y_true, y_pred, t_idx, tot_cases):
     plt.savefig("area_growth_plot.png")
     plt.show()
 
+
 def plot_sensitivity_temperature(y_true, y_pred, t_idx, tot_cases):
     """plot of the average hotspot temperature rate of change used to show predicted growth
     Args:
         y_true (np.ndarray): true values for temp found in input dataset
         y_pred (np.ndarray): model predicted values for temp
         t_idx (list[int]): list of the time index to plot
-    """  
+    """
     (
         temp_mean,
         temp_error1,
@@ -145,7 +152,9 @@ def plot_sensitivity_temperature(y_true, y_pred, t_idx, tot_cases):
         gt_temp_mean,
         gt_temp_error1,
         gt_temp_error2,
-    ) = losses.Calculate_avg_sensitivity(y_pred[:, :, :, 1:], y_true[:, :, :, 1:], tot_cases)
+    ) = losses.Calculate_avg_sensitivity(
+        y_pred[:, :, :, 1:], y_true[:, :, :, 1:], tot_cases
+    )
 
     plt.figure(figsize=(6, 4))
 
@@ -169,11 +178,12 @@ def plot_sensitivity_temperature(y_true, y_pred, t_idx, tot_cases):
     plt.savefig("temp_growth_plot.png")
     plt.show()
 
+
 def plot_saliency(y_pred):
     """plot of the saliency of the predicted values, shows where the growth originates in prediction
     Args:
         y_pred (np.ndarray): model predicted values for temp
-    """  
+    """
     norm_T_max = 4000
     norm_T_min = 300
     threshold = 875  # 875 Temperature(K), max hotspot temperature threshold

@@ -6,7 +6,7 @@ from keras.layers import *
 
 def derivative_solver(temperature, features):
     # initialize integral block structure
-    deriv_res_block1_conv0 = Conv2D(
+    deriv_res_block1_conv0 = keras.layers.Conv2D(
         64,
         3,
         activation="relu",
@@ -14,7 +14,7 @@ def derivative_solver(temperature, features):
         kernel_initializer="he_normal",
         dtype=tf.float32,
     )
-    deriv_res_block1_conv1 = Conv2D(
+    deriv_res_block1_conv1 = keras.layers.Conv2D(
         64,
         3,
         activation="relu",
@@ -22,11 +22,11 @@ def derivative_solver(temperature, features):
         kernel_initializer="he_normal",
         dtype=tf.float32,
     )
-    deriv_res_block1_conv2 = Conv2D(
+    deriv_res_block1_conv2 = keras.layers.Conv2D(
         64, 3, padding="same", kernel_initializer="he_normal", dtype=tf.float32
     )
 
-    deriv_res_block2_conv0 = Conv2D(
+    deriv_res_block2_conv0 = keras.layers.Conv2D(
         128,
         3,
         activation="relu",
@@ -34,7 +34,7 @@ def derivative_solver(temperature, features):
         kernel_initializer="he_normal",
         dtype=tf.float32,
     )
-    deriv_res_block2_conv1 = Conv2D(
+    deriv_res_block2_conv1 = keras.layers.Conv2D(
         128,
         3,
         activation="relu",
@@ -42,11 +42,11 @@ def derivative_solver(temperature, features):
         kernel_initializer="he_normal",
         dtype=tf.float32,
     )
-    deriv_res_block2_conv2 = Conv2D(
+    deriv_res_block2_conv2 = keras.layers.Conv2D(
         128, 3, padding="same", kernel_initializer="he_normal", dtype=tf.float32
     )
 
-    deriv_res_block3_conv0 = Conv2D(
+    deriv_res_block3_conv0 = keras.layers.Conv2D(
         128,
         7,
         activation="relu",
@@ -54,7 +54,7 @@ def derivative_solver(temperature, features):
         kernel_initializer="he_normal",
         dtype=tf.float32,
     )
-    deriv_res_block3_conv1 = Conv2D(
+    deriv_res_block3_conv1 = keras.layers.Conv2D(
         64,
         1,
         activation="relu",
@@ -62,7 +62,7 @@ def derivative_solver(temperature, features):
         kernel_initializer="he_normal",
         dtype=tf.float32,
     )
-    deriv_res_block3_conv2 = Conv2D(
+    deriv_res_block3_conv2 = keras.layers.Conv2D(
         32,
         1,
         activation="relu",
@@ -71,7 +71,7 @@ def derivative_solver(temperature, features):
         dtype=tf.float32,
     )
 
-    deriv_T_dot = Conv2D(
+    deriv_T_dot = keras.layers.Conv2D(
         2,
         3,
         activation="tanh",
@@ -87,19 +87,19 @@ def derivative_solver(temperature, features):
     b1_conv0 = deriv_res_block1_conv0(concat)
     b1_conv1 = deriv_res_block1_conv1(b1_conv0)
     b1_conv2 = deriv_res_block1_conv2(b1_conv1)
-    b1_add = ReLU()(Add()([b1_conv0, b1_conv2]))
+    b1_add = keras.layers.ReLU()(keras.layers.Add()([b1_conv0, b1_conv2]))
 
     # ResNet block #2
     b2_conv0 = deriv_res_block2_conv0(b1_add)
     b2_conv1 = deriv_res_block2_conv1(b2_conv0)
     b2_conv2 = deriv_res_block2_conv2(b2_conv1)
-    b2_add = ReLU()(Add()([b2_conv0, b2_conv2]))
+    b2_add = keras.layers.ReLU()(keras.layers.Add()([b2_conv0, b2_conv2]))
 
     # ResNet block #3
     b3_conv0 = deriv_res_block3_conv0(b2_add)
     b3_conv1 = deriv_res_block3_conv1(b3_conv0)
     b3_conv2 = deriv_res_block3_conv2(b3_conv1)
-    b3_add = Dropout(0.2)(b3_conv2)
+    b3_add = keras.layers.Dropout(0.2)(b3_conv2)
 
     # output
     Tdot = deriv_T_dot(b3_add)
@@ -109,7 +109,7 @@ def derivative_solver(temperature, features):
 
 def integral_solver(t_dot):
     # initialize integral block structure
-    int_res_block1_conv0 = Conv2D(
+    int_res_block1_conv0 = keras.layers.Conv2D(
         64,
         3,
         activation="relu",
@@ -117,7 +117,7 @@ def integral_solver(t_dot):
         kernel_initializer="he_normal",
         dtype=tf.float32,
     )
-    int_res_block1_conv1 = Conv2D(
+    int_res_block1_conv1 = keras.layers.Conv2D(
         64,
         3,
         activation="relu",
@@ -125,11 +125,11 @@ def integral_solver(t_dot):
         kernel_initializer="he_normal",
         dtype=tf.float32,
     )
-    int_res_block1_conv2 = Conv2D(
+    int_res_block1_conv2 = keras.layers.Conv2D(
         64, 3, padding="same", kernel_initializer="he_normal", dtype=tf.float32
     )
 
-    int_res_block2_conv0 = Conv2D(
+    int_res_block2_conv0 = keras.layers.Conv2D(
         128,
         3,
         activation="relu",
@@ -137,7 +137,7 @@ def integral_solver(t_dot):
         kernel_initializer="he_normal",
         dtype=tf.float32,
     )
-    int_res_block2_conv1 = Conv2D(
+    int_res_block2_conv1 = keras.layers.Conv2D(
         128,
         3,
         activation="relu",
@@ -145,11 +145,11 @@ def integral_solver(t_dot):
         kernel_initializer="he_normal",
         dtype=tf.float32,
     )
-    int_res_block2_conv2 = Conv2D(
+    int_res_block2_conv2 = keras.layers.Conv2D(
         128, 3, padding="same", kernel_initializer="he_normal", dtype=tf.float32
     )
 
-    int_res_block3_conv0 = Conv2D(
+    int_res_block3_conv0 = keras.layers.Conv2D(
         128,
         7,
         activation="relu",
@@ -157,7 +157,7 @@ def integral_solver(t_dot):
         kernel_initializer="he_normal",
         dtype=tf.float32,
     )
-    int_res_block3_conv1 = Conv2D(
+    int_res_block3_conv1 = keras.layers.Conv2D(
         64,
         1,
         activation="relu",
@@ -165,7 +165,7 @@ def integral_solver(t_dot):
         kernel_initializer="he_normal",
         dtype=tf.float32,
     )
-    int_res_block3_conv2 = Conv2D(
+    int_res_block3_conv2 = keras.layers.Conv2D(
         32,
         1,
         activation="relu",
@@ -174,7 +174,7 @@ def integral_solver(t_dot):
         dtype=tf.float32,
     )
 
-    T_int = Conv2D(
+    T_int = keras.layers.Conv2D(
         2,
         3,
         activation="tanh",
@@ -187,20 +187,20 @@ def integral_solver(t_dot):
     b1_conv0 = int_res_block1_conv0(t_dot)
     b1_conv1 = int_res_block1_conv1(b1_conv0)
     b1_conv2 = int_res_block1_conv2(b1_conv1)
-    b1_add = ReLU()(Add()([b1_conv0, b1_conv2]))
+    b1_add = keras.layers.ReLU()(keras.layers.Add()([b1_conv0, b1_conv2]))
 
     # ResNet block #2
     b2_conv0 = int_res_block2_conv0(b1_add)
     b2_conv1 = int_res_block2_conv1(b2_conv0)
     b2_conv2 = int_res_block2_conv2(b2_conv1)
-    b2_add = ReLU()(Add()([b2_conv0, b2_conv2]))
-    b2_add = Dropout(0.2)(b2_add)
+    b2_add = keras.layers.ReLU()(keras.layers.Add()([b2_conv0, b2_conv2]))
+    b2_add = keras.layers.Dropout(0.2)(b2_add)
 
     # ResNet block #3
     b3_conv0 = int_res_block3_conv0(b2_add)
     b3_conv1 = int_res_block3_conv1(b3_conv0)
     b3_conv2 = int_res_block3_conv2(b3_conv1)
-    b3_add = Dropout(0.2)(b3_conv2)
+    b3_add = keras.layers.Dropout(0.2)(b3_conv2)
 
     # output
     Tint = T_int(b3_add)
@@ -313,7 +313,7 @@ def parc(
         padding="same",
         kernel_initializer="he_normal",
         dtype=tf.float32,
-    )(up8)
+    )(merge8)
     conv8 = keras.layers.Conv2D(
         128,
         5,
