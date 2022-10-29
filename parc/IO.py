@@ -6,12 +6,12 @@ import skimage
 
 
 def parse_data(
-    file_name: str, input_img_size: int, case_numbers: int, time_steps: int, del_t: int
+    file_location: str, input_img_size: int, case_numbers: int, time_steps: int, del_t: int
 ) -> np.ndarray:
     """parse the raw data and return numpy arrays with microstructure images and temp/pressure outputs
 
     Args:
-        file_name (str) : file name of raw data
+        file_location (str) : file location of raw data
         input_img_size (int) : pixel size of square input image
         case_numbers (int) : number of cases in the data set
         time_steps (int) : number of time steps used
@@ -39,8 +39,7 @@ def parse_data(
 
         # Load Original Microstructure Image
         original_img = (
-            "./"
-            + file_name
+            file_location
             + "/microstructures/data_"
             + str(format(case_idx, "02d"))
             + ".pgm"
@@ -62,7 +61,8 @@ def parse_data(
                 output_data[case_idx - 1, :, :, time_idx, 1] = press
             else:
                 temperature_name = (
-                    "./data/raw/temperatures/data_"
+                    file_location
+                    + "/temperatures/data_"
                     + str(format(case_idx, "02d"))
                     + "/Temp_"
                     + str(format(time_idx, "02d"))
@@ -76,7 +76,8 @@ def parse_data(
                 output_data[case_idx - 1, :, :, time_idx, 0] = temp
 
                 pressure_name = (
-                    "./data/raw/pressures/data_"
+                    file_location
+                    + "/pressures/data_"
                     + str(format(case_idx, "02d"))
                     + "/pres_"
                     + str(format(time_idx, "02d"))

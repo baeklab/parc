@@ -19,8 +19,14 @@ def visualize_inference(
         case_num (int):        case number to visualize prediction
     """
     fig,ax = plt.subplots(2,len(time_idx), figsize=(28, 8) )
-    plt.subplots_adjust(wspace=0.02, 
-                        hspace=0.04)
+    plt.subplots_adjust(wspace=0.02)
+    
+    #convert time index to nanoseconds
+    t_idx = np.array(time_idx)
+    t_idx = t_idx * (1000000000)
+    for i in range(len(t_idx)):
+        t_idx[i] = round(t_idx[i],2)
+        
     for i in range (len(time_idx)):
         #Prediction graph
         ax[0][i].clear()
@@ -29,8 +35,11 @@ def visualize_inference(
         ax[0][i].set_yticks([])
         ax[0][i].imshow(np.squeeze(y_true[case_num,:,:,(i)]), cmap='jet',vmin=-1,vmax=1)
         #Ground truth graph
+        ax[1][i].clear()
+        ax[1][i].clear()
         ax[1][i].set_xticks([])
         ax[1][i].set_yticks([])
+        ax[1][i].set_xlabel('Time = '+str(t_idx[i]) + 'ns', color='r')
         ax[1][i].imshow(np.squeeze(y_pred[case_num,:,:,(i)]), cmap='jet',vmin=-1,vmax=1)
     plt.show()
     
@@ -43,6 +52,13 @@ def plot_rmse(all_rmse, t_idx):
     """
     sample_name = "RMSE"
     plt.figure(figsize=[17, 4])
+        
+    #convert time index to nanoseconds
+    t_idx = np.array(t_idx)
+    t_idx = t_idx * (1000000000)
+    for i in range(len(t_idx)):
+        t_idx[i] = round(t_idx[i],2)
+    
     plt.boxplot(
         all_rmse,
         whis=[5, 95],
@@ -73,7 +89,13 @@ def plot_r2(all_r2, t_idx):
 
     sample_name = "R2"
     plt.figure(figsize=[17, 4])
-
+    
+    #convert time index to nanoseconds
+    t_idx = np.array(t_idx)
+    t_idx = t_idx * (1000000000)
+    for i in range(len(t_idx)):
+        t_idx[i] = round(t_idx[i],2)
+    
     plt.boxplot(
         all_r2,
         whis=[5, 95],
@@ -90,7 +112,6 @@ def plot_r2(all_r2, t_idx):
     plt.title(sample_name)
     plt.xlabel("ns")
     plt.ylabel("R2")
-    plt.axis([0.5, 15.5, 0, 1])
     plt.legend()
     plt.show()
 
@@ -169,16 +190,17 @@ def plot_sensitivity_temperature(y_true, y_pred, t_idx, tot_cases):
     plt.savefig("temp_growth_plot.png")
     plt.show()
 
-def plot_saliency(y_pred):
+def plot_saliency(y_pred, ts):
     """plot of the saliency of the predicted values, shows where the growth originates in prediction
     Args:
         y_pred (np.ndarray): model predicted values for temp
+        ts (int): declares which time step to plot the predicted saliency at
     """  
     norm_T_max = 4000
     norm_T_min = 300
     threshold = 875  # 875 Temperature(K), max hotspot temperature threshold
 
-    pred_data = np.squeeze(y_pred[0, :, :, 18])
+    pred_data = np.squeeze(y_pred[0, :, :, ts])
     pred_data = (pred_data + 1.0) / 2.0
     pred_data = (pred_data * (norm_T_max - norm_T_min)) + norm_T_min
     pred_mask = pred_data > threshold
