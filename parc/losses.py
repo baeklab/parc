@@ -135,8 +135,7 @@ def sensitivity_single_sample(test_data):
         test_data (np.ndarray): prediction temp/press values to test sensitivity
     """
     
-    threshold = 0.1554  # 875 Temperature(K), max hotspot temperature threshold
-
+    threshold = 0.1554
     area_list = []
     # Rescale the output
     test_data = (test_data + 1.0) / 2.0

@@ -343,9 +343,6 @@ def parc(
     )(conv9)
     feature_map = keras.layers.Dropout(0.2, dtype=tf.float32)(feature_map)
 
-    # recurrent
-    T0_input = keras.Input(input_size)  # todo: seems like not used?
-
     T0 = keras.Input(input_size)
     T_output_sr = []
     Tdot_output_sr = []

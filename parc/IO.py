@@ -5,30 +5,13 @@ from PIL import Image
 import cv2
 import skimage
 
-
-# todo: input_img_size can be referred from the pgm file. Make it more adaptable
-# todo: not sure case_number is relevant for this function. This is the one-time run
-#  function where we parse the data and store them as numpy format after processing.
-#  Thus, feels like processing every possible data makes more sense to me.
-# todo: need to return the mins and maxs we used for normalizing the fields as part of the
-#  return for this function
 def parse_data(
-<<<<<<< HEAD
-    file_location: str, input_img_size: int, case_numbers: int, time_steps: int, del_t: int
-=======
-    dir_data: str, input_img_size: int, case_numbers: int, time_steps: int, del_t: int
->>>>>>> 9d304844750a9ea25b87bc51835faafbe9eddc13
+    dir_data: str, time_steps: int, del_t: int
 ) -> np.ndarray:
     """parse the raw data and return numpy arrays with microstructure images and temp/pressure outputs
 
     Args:
-<<<<<<< HEAD
-        file_location (str) : file location of raw data
-=======
         dir_data (str) : root directory for data set
->>>>>>> 9d304844750a9ea25b87bc51835faafbe9eddc13
-        input_img_size (int) : pixel size of square input image
-        case_numbers (int) : number of cases in the data set
         time_steps (int) : number of time steps used
         del_t (int) : change of time per each time step
 
@@ -37,37 +20,36 @@ def parse_data(
         output_data (np.ndarray) : fields (e.g., temp, pressure) and change of fields (e.g., temp_dot, pres_dot)
     """
 
+    # get image size
+    filepath = dir_data + "\microstructures\data_01.pgm"
+    img = Image.open(filepath)
+    width = img.width
+    height = img.height
+    
+    #indicate total case numbers in the data set
+    case_numbers = len(os.listdir(dir_data + "/microstructures"))
+    
     # initialize and format data arrays
     microstructure_data = np.zeros(
-        (case_numbers, input_img_size, input_img_size, 2)
+        (case_numbers, width, height, 2)
     )  # [0: microstructure, 1: distance map]
     output_data = np.zeros(
-        (case_numbers, input_img_size, input_img_size, time_steps, 4)
+        (case_numbers, width, height, time_steps, 4)
     )  # output dimension 5 shape: [0:T,1:P,2:T_dot,3:P_dot]
 
     # Generate Distance map (normalized distance from y-axis)
-    # Size of the map is same as the original microsturcture image size (485x485)
-    wave_map = np.zeros((input_img_size, input_img_size))
-    for w in range(1, input_img_size):
+    # Size of the map is same as the original microsturcture image size
+    wave_map = np.zeros((width, height))
+    for w in range(1, width):
         wave_map[:, w] = (
-            w / 485.0
-        )  # todo: only for our problem at the moment, make it adaptable
-
+            w / width
+        )
     # todo: need to determine how we expect the data.
     # iterate over cases
-    for case_idx in range(1, case_numbers + 1):
-
+    for case_idx in range(1,case_numbers+1):
         # Load Original Microstructure Image
-<<<<<<< HEAD
-        original_img = (
-            file_location
-            + "/microstructures/data_"
-            + str(format(case_idx, "02d"))
-            + ".pgm"
-=======
         img_raw = osp.join(
             dir_data, "microstructures", "data_" + str(format(case_idx, "02d")) + ".pgm"
->>>>>>> 9d304844750a9ea25b87bc51835faafbe9eddc13
         )
         img = cv2.imread(img_raw)
         img = img[:, :, 1]
@@ -79,45 +61,32 @@ def parse_data(
         # iterate over timestep for the fields:
         for time_idx in range(0, time_steps):
             if time_idx == 0:  # initial field condition at T0
-                temp = np.full((input_img_size, input_img_size), 300.0)
+                temp = np.full((width, height), 300.0)
                 output_data[case_idx - 1, :, :, time_idx, 0] = temp
-                press = np.full((input_img_size, input_img_size), 0)
+                press = np.full((width, height), 0)
                 output_data[case_idx - 1, :, :, time_idx, 1] = press
             else:
-                temperature_name = (
-                    file_location
-                    + "/temperatures/data_"
-                    + str(format(case_idx, "02d"))
-                    + "/Temp_"
-                    + str(format(time_idx, "02d"))
-                    + ".txt"
+                dir_temperature = osp.join(
+                     dir_data, "temperatures",
+                    "data_" + str(format(case_idx, "02d")),
+                    "Temp_" + str(format(time_idx, "02d")) + ".txt",
                 )
-                temperature_img = np.loadtxt(temperature_name)
+                temperature_img = np.loadtxt(dir_temperature)
                 # reshape temp values to image size
-                temp = np.reshape(temperature_img, (input_img_size, input_img_size))
+                temp = np.reshape(temperature_img, (width, height))
                 # clip the temperature value such that it ranges between 300K and 4000K
                 temp = np.clip(temp, 300, 4000)
                 output_data[case_idx - 1, :, :, time_idx, 0] = temp
 
-<<<<<<< HEAD
-                pressure_name = (
-                    file_location
-                    + "/pressures/data_"
-                    + str(format(case_idx, "02d"))
-                    + "/pres_"
-                    + str(format(time_idx, "02d"))
-                    + ".txt"
-=======
                 dir_pressure = osp.join(
-                    "data/raw/pressures/",
+                     dir_data, "pressures",
                     "data_" + str(format(case_idx, "02d")),
                     "pres_" + str(format(time_idx, "02d")) + ".txt",
->>>>>>> 9d304844750a9ea25b87bc51835faafbe9eddc13
                 )
 
                 pressure_img = np.loadtxt(dir_pressure)
                 # reshape pressure values to image size
-                pressure = np.reshape(pressure_img, (input_img_size, input_img_size))
+                pressure = np.reshape(pressure_img, (width, height))
                 output_data[case_idx - 1, :, :, time_idx, 1] = pressure
 
                 # Calculate T_dot --> T_dot = (T(t+del_t)-T(t))/del_t
@@ -136,9 +105,14 @@ def parse_data(
                 output_data[case_idx - 1, :, :, time_idx, 2] = Tdot
                 output_data[case_idx - 1, :, :, time_idx, 3] = Pdot
 
+    #calculate max and min of fields
+    T_max = np.amax(output_data[:, :, :, :, 0])
+    T_min = np.amin(output_data[:, :, :, :, 0])
+    P_max = np.amax(output_data[:, :, :, :, 1])
+    P_min = np.amin(output_data[:, :, :, :, 1])
+    
     # Normalize fields to range [-1,1]
     for channel in range(0, 4):
-        # Normalize Temperature to range [-1,1]
         norm_max = np.amax(output_data[:, :, :, :, channel])
         norm_min = np.amin(output_data[:, :, :, :, channel])
         output_data[:, :, :, :, channel] = (
@@ -180,8 +154,7 @@ def parse_data(
     print("shape of microstructure data is: ", microstructure_data.shape)
     print("shape of output data is: ", output_data.shape)
 
-    return microstructure_data, output_data
-
+    return microstructure_data, output_data, T_max, T_min, P_max, P_min
 
 # todo: not sure if we need this,
 def split_data(
