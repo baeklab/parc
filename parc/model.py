@@ -385,7 +385,7 @@ class PARC(keras.Model):
         # Recurrent formulation
         F_dots, Fs = [], []
         F_current = F_initial
-        for i in range(self.numTS):
+        for i in range(self.n_timesteps):
             Fdot_i = self.derivative_solver(F_current, feature_map)
             Fint_i = self.integral_solver(Fdot_i)
             F_current = keras.layers.add(
