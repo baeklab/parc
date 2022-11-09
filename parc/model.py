@@ -1,415 +1,216 @@
 import tensorflow as tf
 import keras
-from keras.models import *
-from keras.layers import *
 
+class PARC(keras.Model):
+  def __init__(self, input_size, n_fields=2, n_timesteps=19, n_featuremaps=128, **kwargs):
+    super(PARC, self).__init__(**kwargs)
+    self.n_fields = n_fields
+    self.n_timesteps = n_timesteps
+    self.n_featuremaps = n_featuremaps
+    self.input_size = input_size
 
-def derivative_solver(temperature, features):
+    # fmt: off
+    # derivitave solver initialization
+    self.deriv_res_block1_conv0 = keras.layers.Conv2D(
+        64, 3, activation="relu", padding="same", kernel_initializer="he_normal", dtype=tf.float32, name='deriv_1_0')
+    self.deriv_res_block1_conv1 = keras.layers.Conv2D(
+        64, 3, activation="relu", padding="same", kernel_initializer="he_normal", dtype=tf.float32, name='deriv_1_1')
+    self.deriv_res_block1_conv2 = keras.layers.Conv2D(
+        64, 3, padding="same", kernel_initializer="he_normal", dtype=tf.float32, name='deriv_1_2')
+
+    self.deriv_res_block2_conv0 = keras.layers.Conv2D(
+        128, 3, activation="relu", padding="same", kernel_initializer="he_normal", dtype=tf.float32, name='deriv_2_0')
+    self.deriv_res_block2_conv1 = keras.layers.Conv2D(
+        128, 3, activation="relu", padding="same", kernel_initializer="he_normal", dtype=tf.float32, name='deriv_2_1')
+    self.deriv_res_block2_conv2 = keras.layers.Conv2D(
+        128, 3, padding="same", kernel_initializer="he_normal", dtype=tf.float32, name='deriv_2_2')
+
+    self.deriv_res_block3_conv0 = keras.layers.Conv2D(
+        128, 7, activation="relu", padding="same", kernel_initializer="he_normal", dtype=tf.float32, name='deriv_3_0')
+    self.deriv_res_block3_conv1 = keras.layers.Conv2D(
+        64, 1, activation="relu", padding="same", kernel_initializer="he_normal", dtype=tf.float32, name='deriv_3_1')
+    self.deriv_res_block3_conv2 = keras.layers.Conv2D(
+        32, 1, activation="relu", padding="same", kernel_initializer="he_normal", dtype=tf.float32, name='deriv_3_2')
+
+    self.deriv_F_dot = keras.layers.Conv2D(
+        self.n_fields, 3, activation="tanh", padding="same", kernel_initializer="he_normal", dtype=tf.float32, name='deriv_out')
+    
     # initialize integral block structure
-    deriv_res_block1_conv0 = keras.layers.Conv2D(
-        64,
-        3,
-        activation="relu",
-        padding="same",
-        kernel_initializer="he_normal",
-        dtype=tf.float32,
-    )
-    deriv_res_block1_conv1 = keras.layers.Conv2D(
-        64,
-        3,
-        activation="relu",
-        padding="same",
-        kernel_initializer="he_normal",
-        dtype=tf.float32,
-    )
-    deriv_res_block1_conv2 = keras.layers.Conv2D(
-        64, 3, padding="same", kernel_initializer="he_normal", dtype=tf.float32
-    )
+    self.int_res_block1_conv0 = keras.layers.Conv2D(
+        64, 3, activation="relu", padding="same", kernel_initializer="he_normal", dtype=tf.float32, name='int_1_0')
+    self.int_res_block1_conv1 = keras.layers.Conv2D(
+        64, 3, activation="relu", padding="same", kernel_initializer="he_normal", dtype=tf.float32, name='int_1_1')
+    self.int_res_block1_conv2 = keras.layers.Conv2D(
+        64, 3, padding="same", kernel_initializer="he_normal", dtype=tf.float32, name='int_1_2')
 
-    deriv_res_block2_conv0 = keras.layers.Conv2D(
-        128,
-        3,
-        activation="relu",
-        padding="same",
-        kernel_initializer="he_normal",
-        dtype=tf.float32,
-    )
-    deriv_res_block2_conv1 = keras.layers.Conv2D(
-        128,
-        3,
-        activation="relu",
-        padding="same",
-        kernel_initializer="he_normal",
-        dtype=tf.float32,
-    )
-    deriv_res_block2_conv2 = keras.layers.Conv2D(
-        128, 3, padding="same", kernel_initializer="he_normal", dtype=tf.float32
-    )
+    self.int_res_block2_conv0 = keras.layers.Conv2D(
+        128, 3, activation="relu", padding="same", kernel_initializer="he_normal", dtype=tf.float32, name='int_2_0')
+    self.int_res_block2_conv1 = keras.layers.Conv2D(
+        128, 3, activation="relu", padding="same", kernel_initializer="he_normal", dtype=tf.float32, name='int_2_1')
+    self.int_res_block2_conv2 = keras.layers.Conv2D(
+        128, 3, padding="same", kernel_initializer="he_normal", dtype=tf.float32, name='int_2_2')
 
-    deriv_res_block3_conv0 = keras.layers.Conv2D(
-        128,
-        7,
-        activation="relu",
-        padding="same",
-        kernel_initializer="he_normal",
-        dtype=tf.float32,
-    )
-    deriv_res_block3_conv1 = keras.layers.Conv2D(
-        64,
-        1,
-        activation="relu",
-        padding="same",
-        kernel_initializer="he_normal",
-        dtype=tf.float32,
-    )
-    deriv_res_block3_conv2 = keras.layers.Conv2D(
-        32,
-        1,
-        activation="relu",
-        padding="same",
-        kernel_initializer="he_normal",
-        dtype=tf.float32,
-    )
+    self.int_res_block3_conv0 = keras.layers.Conv2D(
+        128, 7, activation="relu", padding="same", kernel_initializer="he_normal", dtype=tf.float32, name='int_3_0')
+    self.int_res_block3_conv1 = keras.layers.Conv2D(
+        64, 1, activation="relu", padding="same", kernel_initializer="he_normal", dtype=tf.float32, name='int_3_1')
+    self.int_res_block3_conv2 = keras.layers.Conv2D(
+        32, 1, activation="relu", padding="same", kernel_initializer="he_normal", dtype=tf.float32, name='int_3_2')
 
-    deriv_T_dot = keras.layers.Conv2D(
-        2,
-        3,
-        activation="tanh",
-        padding="same",
-        kernel_initializer="he_normal",
-        dtype=tf.float32,
-    )
+    self.F_int = keras.layers.Conv2D(
+        self.n_fields, 3, activation="tanh", padding="same", kernel_initializer="he_normal", dtype=tf.float32, name='int_out')
+    
+    # shape descriptors (UNet)
+    self.conv1_1 = keras.layers.Conv2D(
+        64, 5, activation="relu", padding="same", kernel_initializer="he_normal", dtype=tf.float32, name='unet_down_1_1')
+    self.conv1_2 = keras.layers.Conv2D(
+        64, 5, activation="relu", padding="same", kernel_initializer="he_normal", dtype=tf.float32, name='unet_down_1_2')
 
-    # combine temperature and feature map
-    concat = keras.layers.concatenate([temperature, features], axis=3)
+    self.conv2_1 = keras.layers.Conv2D(
+        128, 5, activation="relu", padding="same", kernel_initializer="he_normal", dtype=tf.float32, name='unet_down_2_1')
+    self.conv2_2 = keras.layers.Conv2D(
+        128, 5, activation="relu", padding="same", kernel_initializer="he_normal", dtype=tf.float32, name='unet_down_2_2')
+
+    self.conv3_1 = keras.layers.Conv2D(
+        256, 5, activation="relu", padding="same", kernel_initializer="he_normal", dtype=tf.float32, name='unet_down_3_1')
+    self.conv3_2 = keras.layers.Conv2D(
+        256, 5, activation="relu", padding="same", kernel_initializer="he_normal", dtype=tf.float32, name='unet_down_3_2')
+
+    self.conv4 = keras.layers.Conv2D(
+        512, 5, activation="relu", padding="same", kernel_initializer="he_normal", dtype=tf.float32, name='unet_down_4_1')
+
+    self.conv7_1 = keras.layers.Conv2D(
+        256, 5, activation="relu", padding="same", kernel_initializer="he_normal", dtype=tf.float32, name='unet_up_7_1')
+    self.conv7_2 = keras.layers.Conv2D(
+        256, 5, activation="relu", padding="same", kernel_initializer="he_normal", dtype=tf.float32, name='unet_up_7_2')
+
+    self.conv8_1 = keras.layers.Conv2D(
+        128, 5, activation="relu", padding="same", kernel_initializer="he_normal", dtype=tf.float32, name='unet_up_8_1')
+    self.conv8_2 = keras.layers.Conv2D(
+        128, 5, activation="relu", padding="same", kernel_initializer="he_normal", dtype=tf.float32, name='unet_up_8_2')
+
+    self.conv9_1 = keras.layers.Conv2D(
+        128, 5, activation="relu", padding="same", kernel_initializer="he_normal", dtype=tf.float32, name='unet_up_9_1')
+    self.feature_map = keras.layers.Conv2D(
+        self.n_featuremaps, 5, activation="relu", padding="same", kernel_initializer="he_normal", dtype=tf.float32, name='unet_out')
+    # fmt: on
+    
+    self.input_layer1 = keras.layers.Input( (self.input_size, self.input_size, 2) )
+    self.input_layer2 = keras.layers.Input( (self.input_size, self.input_size, self.n_fields) )
+    self.out = self.call( [self.input_layer1, self.input_layer2] )
+
+    super(PARC, self).__init__(inputs=[self.input_layer1, self.input_layer2], outputs=self.out, **kwargs)
+
+  def build(self):
+    self._is_graph_network = True
+    self._init_graph_network(inputs=[self.input_layer1, self.input_layer2], outputs=self.out)
+
+  def call(self, inputs, training=False):
+    microstructure = inputs[0]
+    F_initial = inputs[1]
+
+    # shape descriptor: UNet
+    x = keras.layers.GaussianNoise(0.01)(microstructure)
+      
+    conv1 = self.conv1_1(x)
+    conv1 = self.conv1_2(conv1)
+    pool1 = keras.layers.MaxPooling2D(pool_size=(2,2))(conv1)
+
+    conv2 = self.conv2_1(pool1)
+    conv2 = self.conv2_2(conv2)
+    pool2 = keras.layers.MaxPooling2D(pool_size=(2,2))(conv2)
+
+    conv3 = self.conv3_1(pool2)
+    conv3 = self.conv3_2(conv3)
+    pool3 = keras.layers.MaxPooling2D(pool_size=(2,2))(conv3)
+    
+    conv4 = self.conv4(pool3)
+    drop4 = keras.layers.Dropout(0.2)(conv4)
+
+    up6 = keras.layers.UpSampling2D(size=(2,2))(drop4)
+    merge7 = keras.layers.concatenate( [conv3, up6], axis=3 )
+    conv7 = self.conv7_1(merge7)
+    conv7 = self.conv7_2(conv7)
+
+    up8 = keras.layers.UpSampling2D(size=(2,2))(conv7)
+    
+    # non scientific advance version
+    # merge8 = keras.layers.concatenate( [conv2, up8], axis=3 )
+    # conv8 = self.conv8_1(merge8)
+
+    conv8 = self.conv8_1(up8) # Scientific Advance version: 
+    conv8 = self.conv8_2(conv8)
+    
+    up9 = keras.layers.UpSampling2D(size=(2,2))(conv8)
+    merge9 = keras.layers.concatenate( [conv1, up9], axis=3 )
+
+    conv9 = self.conv9_1(merge9)
+    feature_map = self.feature_map(conv9)
+    feature_map = keras.layers.Dropout(0.2)(feature_map)
+
+    # Recurrent formulation
+    F_dots, Fs = [], []
+    F_current = F_initial
+    for i in range(self.numTS): 
+      Fdot_i = self.derivative_solver(F_current, feature_map)
+      Fint_i = self.integral_solver(Fdot_i)
+      F_current = keras.layers.add( [F_current, Fint_i] ) # update for next timestep
+
+      Fs.append( F_current )
+      F_dots.append( Fdot_i )
+
+    F_output = keras.layers.concatenate( Fs, axis=3 )
+    Fdot_output = keras.layers.concatenate( F_dots, axis=3 )
+    
+    return F_output, Fdot_output
+
+  
+  def derivative_solver(self, Fs, features):
+    concat = keras.layers.concatenate([Fs, features], axis=3)
 
     # ResNet block #1
-    b1_conv0 = deriv_res_block1_conv0(concat)
-    b1_conv1 = deriv_res_block1_conv1(b1_conv0)
-    b1_conv2 = deriv_res_block1_conv2(b1_conv1)
+    b1_conv0 = self.deriv_res_block1_conv0(concat)
+    b1_conv1 = self.deriv_res_block1_conv1(b1_conv0)
+    b1_conv2 = self.deriv_res_block1_conv2(b1_conv1)
     b1_add = keras.layers.ReLU()(keras.layers.Add()([b1_conv0, b1_conv2]))
 
     # ResNet block #2
-    b2_conv0 = deriv_res_block2_conv0(b1_add)
-    b2_conv1 = deriv_res_block2_conv1(b2_conv0)
-    b2_conv2 = deriv_res_block2_conv2(b2_conv1)
+    b2_conv0 = self.deriv_res_block2_conv0(b1_add)
+    b2_conv1 = self.deriv_res_block2_conv1(b2_conv0)
+    b2_conv2 = self.deriv_res_block2_conv2(b2_conv1)
     b2_add = keras.layers.ReLU()(keras.layers.Add()([b2_conv0, b2_conv2]))
 
     # ResNet block #3
-    b3_conv0 = deriv_res_block3_conv0(b2_add)
-    b3_conv1 = deriv_res_block3_conv1(b3_conv0)
-    b3_conv2 = deriv_res_block3_conv2(b3_conv1)
+    b3_conv0 = self.deriv_res_block3_conv0(b2_add)
+    b3_conv1 = self.deriv_res_block3_conv1(b3_conv0)
+    b3_conv2 = self.deriv_res_block3_conv2(b3_conv1)
     b3_add = keras.layers.Dropout(0.2)(b3_conv2)
 
     # output
-    Tdot = deriv_T_dot(b3_add)
+    Fdot = self.deriv_F_dot(b3_add)
+    return Fdot
 
-    return Tdot
-
-
-def integral_solver(t_dot):
-    # initialize integral block structure
-    int_res_block1_conv0 = keras.layers.Conv2D(
-        64,
-        3,
-        activation="relu",
-        padding="same",
-        kernel_initializer="he_normal",
-        dtype=tf.float32,
-    )
-    int_res_block1_conv1 = keras.layers.Conv2D(
-        64,
-        3,
-        activation="relu",
-        padding="same",
-        kernel_initializer="he_normal",
-        dtype=tf.float32,
-    )
-    int_res_block1_conv2 = keras.layers.Conv2D(
-        64, 3, padding="same", kernel_initializer="he_normal", dtype=tf.float32
-    )
-
-    int_res_block2_conv0 = keras.layers.Conv2D(
-        128,
-        3,
-        activation="relu",
-        padding="same",
-        kernel_initializer="he_normal",
-        dtype=tf.float32,
-    )
-    int_res_block2_conv1 = keras.layers.Conv2D(
-        128,
-        3,
-        activation="relu",
-        padding="same",
-        kernel_initializer="he_normal",
-        dtype=tf.float32,
-    )
-    int_res_block2_conv2 = keras.layers.Conv2D(
-        128, 3, padding="same", kernel_initializer="he_normal", dtype=tf.float32
-    )
-
-    int_res_block3_conv0 = keras.layers.Conv2D(
-        128,
-        7,
-        activation="relu",
-        padding="same",
-        kernel_initializer="he_normal",
-        dtype=tf.float32,
-    )
-    int_res_block3_conv1 = keras.layers.Conv2D(
-        64,
-        1,
-        activation="relu",
-        padding="same",
-        kernel_initializer="he_normal",
-        dtype=tf.float32,
-    )
-    int_res_block3_conv2 = keras.layers.Conv2D(
-        32,
-        1,
-        activation="relu",
-        padding="same",
-        kernel_initializer="he_normal",
-        dtype=tf.float32,
-    )
-
-    T_int = keras.layers.Conv2D(
-        2,
-        3,
-        activation="tanh",
-        padding="same",
-        kernel_initializer="he_normal",
-        dtype=tf.float32,
-    )
-
+  def integral_solver(self, t_dot):
     # ResNet block #1
-    b1_conv0 = int_res_block1_conv0(t_dot)
-    b1_conv1 = int_res_block1_conv1(b1_conv0)
-    b1_conv2 = int_res_block1_conv2(b1_conv1)
+    b1_conv0 = self.int_res_block1_conv0(t_dot)
+    b1_conv1 = self.int_res_block1_conv1(b1_conv0)
+    b1_conv2 = self.int_res_block1_conv2(b1_conv1)
     b1_add = keras.layers.ReLU()(keras.layers.Add()([b1_conv0, b1_conv2]))
 
     # ResNet block #2
-    b2_conv0 = int_res_block2_conv0(b1_add)
-    b2_conv1 = int_res_block2_conv1(b2_conv0)
-    b2_conv2 = int_res_block2_conv2(b2_conv1)
+    b2_conv0 = self.int_res_block2_conv0(b1_add)
+    b2_conv1 = self.int_res_block2_conv1(b2_conv0)
+    b2_conv2 = self.int_res_block2_conv2(b2_conv1)
     b2_add = keras.layers.ReLU()(keras.layers.Add()([b2_conv0, b2_conv2]))
     b2_add = keras.layers.Dropout(0.2)(b2_add)
 
     # ResNet block #3
-    b3_conv0 = int_res_block3_conv0(b2_add)
-    b3_conv1 = int_res_block3_conv1(b3_conv0)
-    b3_conv2 = int_res_block3_conv2(b3_conv1)
+    b3_conv0 = self.int_res_block3_conv0(b2_add)
+    b3_conv1 = self.int_res_block3_conv1(b3_conv0)
+    b3_conv2 = self.int_res_block3_conv2(b3_conv1)
     b3_add = keras.layers.Dropout(0.2)(b3_conv2)
 
     # output
-    Tint = T_int(b3_add)
+    Fint = self.F_int(b3_add)
 
-    return Tint
-
-
-#
-def parc(
-    input_size,
-    numTS,
-    depth,
-    kernel_size,
-    numFeatureMaps,
-):
-    # UNet
-    inputs = keras.Input(input_size)
-
-    inputs_noise = keras.layers.GaussianNoise(0.01)(inputs)
-
-    conv1 = keras.layers.Conv2D(
-        64,
-        5,
-        activation="relu",
-        padding="same",
-        kernel_initializer="he_normal",
-        dtype=tf.float32,
-    )(inputs_noise)
-    conv1 = keras.layers.Conv2D(
-        64,
-        5,
-        activation="relu",
-        padding="same",
-        kernel_initializer="he_normal",
-        dtype=tf.float32,
-    )(conv1)
-    pool1 = keras.layers.MaxPooling2D(pool_size=(2, 2), dtype=tf.float32)(conv1)
-
-    conv2 = keras.layers.Conv2D(
-        128,
-        5,
-        activation="relu",
-        padding="same",
-        kernel_initializer="he_normal",
-        dtype=tf.float32,
-    )(pool1)
-    conv2 = keras.layers.Conv2D(
-        128,
-        5,
-        activation="relu",
-        padding="same",
-        kernel_initializer="he_normal",
-        dtype=tf.float32,
-    )(conv2)
-    pool2 = keras.layers.MaxPooling2D(pool_size=(2, 2), dtype=tf.float32)(conv2)
-
-    conv3 = keras.layers.Conv2D(
-        256,
-        5,
-        activation="relu",
-        padding="same",
-        kernel_initializer="he_normal",
-        dtype=tf.float32,
-    )(pool2)
-    conv3 = keras.layers.Conv2D(
-        256,
-        5,
-        activation="relu",
-        padding="same",
-        kernel_initializer="he_normal",
-        dtype=tf.float32,
-    )(conv3)
-    pool3 = keras.layers.MaxPooling2D(pool_size=(2, 2), dtype=tf.float32)(conv3)
-
-    conv4 = keras.layers.Conv2D(
-        512,
-        5,
-        activation="relu",
-        padding="same",
-        kernel_initializer="he_normal",
-        dtype=tf.float32,
-    )(pool3)
-    drop4 = keras.layers.Dropout(0.2, dtype=tf.float32)(conv4)
-
-    up6 = keras.layers.UpSampling2D(size=(2, 2), dtype=tf.float32)(drop4)
-    merge7 = keras.layers.concatenate([conv3, up6], axis=3)
-    conv7 = keras.layers.Conv2D(
-        256,
-        5,
-        activation="relu",
-        padding="same",
-        kernel_initializer="he_normal",
-        dtype=tf.float32,
-    )(merge7)
-    conv7 = keras.layers.Conv2D(
-        256,
-        5,
-        activation="relu",
-        padding="same",
-        kernel_initializer="he_normal",
-        dtype=tf.float32,
-    )(conv7)
-
-    up8 = keras.layers.UpSampling2D(size=(2, 2), dtype=tf.float32)(conv7)
-    merge8 = keras.layers.concatenate([conv2, up8], axis=3)
-    conv8 = keras.layers.Conv2D(
-        128,
-        5,
-        activation="relu",
-        padding="same",
-        kernel_initializer="he_normal",
-        dtype=tf.float32,
-    )(merge8)
-    conv8 = keras.layers.Conv2D(
-        128,
-        5,
-        activation="relu",
-        padding="same",
-        kernel_initializer="he_normal",
-        dtype=tf.float32,
-    )(conv8)
-
-    up9 = keras.layers.UpSampling2D(size=(2, 2), dtype=tf.float32)(conv8)
-    merge9 = keras.layers.concatenate([conv1, up9], axis=3)
-    conv9 = keras.layers.Conv2D(
-        128,
-        5,
-        activation="relu",
-        padding="same",
-        kernel_initializer="he_normal",
-        dtype=tf.float32,
-    )(merge9)
-    feature_map = keras.layers.Conv2D(
-        128,
-        5,
-        activation="relu",
-        padding="same",
-        kernel_initializer="he_normal",
-        dtype=tf.float32,
-    )(conv9)
-    feature_map = keras.layers.Dropout(0.2, dtype=tf.float32)(feature_map)
-
-    T0 = keras.Input(input_size)
-    T_output_sr = []
-    Tdot_output_sr = []
-    current_T = T0
-    for i in range(numTS - 1):
-        current_Tdot = derivative_solver(current_T, feature_map)
-        current_T_int = integral_solver(current_Tdot)
-        next_T = keras.layers.add([current_T, current_T_int])
-        T_output_sr.append(next_T)
-        Tdot_output_sr.append(current_Tdot)
-        current_T = next_T
-        # if i < (numTS-2):
-        #    T_output = keras.layers.concatenate([T_output_sr[i+1]],axis=3)
-        #    Tdot_output = keras.layers.concatenate([Tdot_output_sr[i+1]],axis=3)
-
-    # todo: below seems to be hardcoded for the timestep, does it adapt to the different timestep?
-    T_output = keras.layers.concatenate(
-        [
-            T_output_sr[0],
-            T_output_sr[1],
-            T_output_sr[2],
-            T_output_sr[3],
-            T_output_sr[4],
-            T_output_sr[5],
-            T_output_sr[6],
-            T_output_sr[7],
-            T_output_sr[8],
-            T_output_sr[9],
-            T_output_sr[10],
-            T_output_sr[11],
-            T_output_sr[12],
-            T_output_sr[13],
-            T_output_sr[14],
-            T_output_sr[15],
-            T_output_sr[16],
-            T_output_sr[17],
-            T_output_sr[18],
-        ],
-        axis=3,
-    )
-
-    # todo: below seems to be hardcoded for the timestep, does it adapt to the different timestep?
-    Tdot_output = keras.layers.concatenate(
-        [
-            Tdot_output_sr[0],
-            Tdot_output_sr[1],
-            Tdot_output_sr[2],
-            Tdot_output_sr[3],
-            Tdot_output_sr[4],
-            Tdot_output_sr[5],
-            Tdot_output_sr[6],
-            Tdot_output_sr[7],
-            Tdot_output_sr[8],
-            Tdot_output_sr[9],
-            Tdot_output_sr[10],
-            Tdot_output_sr[11],
-            Tdot_output_sr[12],
-            Tdot_output_sr[13],
-            Tdot_output_sr[14],
-            Tdot_output_sr[15],
-            Tdot_output_sr[16],
-            Tdot_output_sr[17],
-            Tdot_output_sr[18],
-        ],
-        axis=3,
-    )
-
-    model = keras.Model(inputs=[inputs, T0], outputs=[T_output, Tdot_output])
-
-    return model
+    return Fint
