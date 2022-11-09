@@ -19,18 +19,10 @@ def visualize_inference(
         time_idx (list[int]):  list of the time index to plot
         case_num (int):        case number to visualize prediction
     """
-    fig,ax = plt.subplots(2,len(time_idx), figsize=(28, 8) )
-    plt.subplots_adjust(wspace=0.02)
-    
-    #convert time index to nanoseconds
-    t_idx = np.array(time_idx)
-    t_idx = t_idx * (1000000000)
-    for i in range(len(t_idx)):
-        t_idx[i] = round(t_idx[i],2)
 
-    fig, ax = plt.subplots(2, len(time_idx), figsize=(28, 8))
-    plt.subplots_adjust(wspace=0.02, hspace=0.04)
-    for i in range(len(time_idx)):
+    fig, ax = plt.subplots(2, len(t_idx), figsize=(28, 8))
+    plt.subplots_adjust(left=.125, bottom=.65, right=.9, top=.9, wspace=0.02, hspace=0.04)
+    for i in range(len(t_idx)):
         # Prediction graph
         ax[0][i].clear()
         ax[0][i].clear()
@@ -44,15 +36,6 @@ def visualize_inference(
         ax[1][i].set_yticks([])
         ax[1][i].set_xlabel('Time = '+str(t_idx[i]) + 'ns', color='r')
         ax[1][i].imshow(np.squeeze(y_pred[case_num,:,:,(i)]), cmap='jet',vmin=-1,vmax=1)
-        ax[0][i].imshow(
-            np.squeeze(y_true[case_num, :, :, (i)]), cmap="jet", vmin=-1, vmax=1
-        )
-        # Ground truth graph
-        ax[1][i].set_xticks([])
-        ax[1][i].set_yticks([])
-        ax[1][i].imshow(
-            np.squeeze(y_pred[case_num, :, :, (i)]), cmap="jet", vmin=-1, vmax=1
-        )
     plt.show()
 
 
@@ -64,12 +47,6 @@ def plot_rmse(all_rmse, t_idx):
     """
     sample_name = "RMSE"
     plt.figure(figsize=[17, 4])
-        
-    #convert time index to nanoseconds
-    t_idx = np.array(t_idx)
-    t_idx = t_idx * (1000000000)
-    for i in range(len(t_idx)):
-        t_idx[i] = round(t_idx[i],2)
     
     plt.boxplot(
         all_rmse,
@@ -101,12 +78,6 @@ def plot_r2(all_r2, t_idx):
 
     sample_name = "R2"
     plt.figure(figsize=[17, 4])
-    
-    #convert time index to nanoseconds
-    t_idx = np.array(t_idx)
-    t_idx = t_idx * (1000000000)
-    for i in range(len(t_idx)):
-        t_idx[i] = round(t_idx[i],2)
     
     plt.boxplot(
         all_r2,
@@ -148,11 +119,11 @@ def plot_sensitivity_area(y_true, y_pred, t_idx, tot_cases):
 
     plt.figure(figsize=(6, 4))
 
-    plt.plot(t_idx, gt_area_mean, "b-", label="Ground truth")
-    plt.plot(t_idx, area_mean, "r-", label="Prediction")
+    plt.plot(t_idx[1:], gt_area_mean, "b-", label="Ground truth")
+    plt.plot(t_idx[1:], area_mean, "r-", label="Prediction")
 
-    plt.fill_between(t_idx, gt_area_error1, gt_area_error2, color="blue", alpha=0.2)
-    plt.fill_between(t_idx, area_error1, area_error2, color="red", alpha=0.2)
+    plt.fill_between(t_idx[1:], gt_area_error1, gt_area_error2, color="blue", alpha=0.2)
+    plt.fill_between(t_idx[1:], area_error1, area_error2, color="red", alpha=0.2)
 
     # Add labels and title
     plt.title(r"Ave. Hotspot Area Rate of Change ($\dot{A_{hs}}$)", fontsize=14, pad=15)
@@ -187,11 +158,11 @@ def plot_sensitivity_temperature(y_true, y_pred, t_idx, tot_cases):
 
     plt.figure(figsize=(6, 4))
 
-    plt.plot(t_idx[1:16], gt_temp_mean, "b-", label="Ground truth")
-    plt.plot(t_idx[1:16], temp_mean, "r-", label="Prediction")
+    plt.plot(t_idx[1:], gt_temp_mean, "b-", label="Ground truth")
+    plt.plot(t_idx[1:], temp_mean, "r-", label="Prediction")
 
-    plt.fill_between(t_idx, gt_temp_error1, gt_temp_error2, color="blue", alpha=0.2)
-    plt.fill_between(t_idx, temp_error1, temp_error2, color="red", alpha=0.2)
+    plt.fill_between(t_idx[1:], gt_temp_error1, gt_temp_error2, color="blue", alpha=0.2)
+    plt.fill_between(t_idx[1:], temp_error1, temp_error2, color="red", alpha=0.2)
 
     # Add labels and title
     plt.title(
@@ -211,13 +182,6 @@ def plot_saliency(y_pred, ts):
     """plot of the saliency of the predicted values, shows where the growth originates in prediction
     Args:
         y_pred (np.ndarray): model predicted values for temp
-        ts (int): declares which time step to plot the predicted saliency at
-    """  
-
-def plot_saliency(y_pred):
-    """plot of the saliency of the predicted values, shows where the growth originates in prediction
-    Args:
-        y_pred (np.ndarray): model predicted values for temp
     """
     norm_T_max = 4000
     norm_T_min = 300
@@ -228,7 +192,7 @@ def plot_saliency(y_pred):
     pred_data = (pred_data * (norm_T_max - norm_T_min)) + norm_T_min
     pred_mask = pred_data > threshold
 
-    plt.imshow(np.squeeze(pred_mask), cmap="RdGy_r", vmin=-0.0, vmax=1.0)
+    plt.imshow(np.squeeze(pred_mask), cmap="coolwarm", vmin=-0.0, vmax=1.0)
     ax = plt.gca()
     ax.set_xticks([])
     ax.set_yticks([])

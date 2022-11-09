@@ -156,7 +156,6 @@ def parse_data(
 
     return microstructure_data, output_data, T_max, T_min, P_max, P_min
 
-# todo: not sure if we need this,
 def split_data(
     data_in: np.ndarray, output_data: np.ndarray, splits: list
 ) -> np.ndarray:

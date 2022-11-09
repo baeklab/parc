@@ -141,7 +141,7 @@ def sensitivity_single_sample(test_data):
     test_data = (test_data + 1.0) / 2.0
 
     # Calculate area and avg hotspot
-    for i in range(3, 18):
+    for i in range(test_data.shape[2]):
         pred_slice = test_data[:, :, i]
         pred_mask = pred_slice > threshold
         pred_hotspot_area = np.count_nonzero(pred_mask)
