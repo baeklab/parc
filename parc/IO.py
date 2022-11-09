@@ -5,9 +5,8 @@ from PIL import Image
 import cv2
 import skimage
 
-def parse_data(
-    dir_data: str, time_steps: int, del_t: int
-) -> np.ndarray:
+
+def parse_data(dir_data: str, time_steps: int, del_t: int) -> np.ndarray:
     """parse the raw data and return numpy arrays with microstructure images and temp/pressure outputs
 
     Args:
@@ -25,10 +24,10 @@ def parse_data(
     img = Image.open(filepath)
     width = img.width
     height = img.height
-    
-    #indicate total case numbers in the data set
+
+    # indicate total case numbers in the data set
     case_numbers = len(os.listdir(dir_data + "/microstructures"))
-    
+
     # initialize and format data arrays
     microstructure_data = np.zeros(
         (case_numbers, width, height, 2)
@@ -41,12 +40,10 @@ def parse_data(
     # Size of the map is same as the original microsturcture image size
     wave_map = np.zeros((width, height))
     for w in range(1, width):
-        wave_map[:, w] = (
-            w / width
-        )
+        wave_map[:, w] = w / width
     # todo: need to determine how we expect the data.
     # iterate over cases
-    for case_idx in range(1,case_numbers+1):
+    for case_idx in range(1, case_numbers + 1):
         # Load Original Microstructure Image
         img_raw = osp.join(
             dir_data, "microstructures", "data_" + str(format(case_idx, "02d")) + ".pgm"
@@ -67,7 +64,8 @@ def parse_data(
                 output_data[case_idx - 1, :, :, time_idx, 1] = press
             else:
                 dir_temperature = osp.join(
-                     dir_data, "temperatures",
+                    dir_data,
+                    "temperatures",
                     "data_" + str(format(case_idx, "02d")),
                     "Temp_" + str(format(time_idx, "02d")) + ".txt",
                 )
@@ -79,7 +77,8 @@ def parse_data(
                 output_data[case_idx - 1, :, :, time_idx, 0] = temp
 
                 dir_pressure = osp.join(
-                     dir_data, "pressures",
+                    dir_data,
+                    "pressures",
                     "data_" + str(format(case_idx, "02d")),
                     "pres_" + str(format(time_idx, "02d")) + ".txt",
                 )
@@ -105,12 +104,12 @@ def parse_data(
                 output_data[case_idx - 1, :, :, time_idx, 2] = Tdot
                 output_data[case_idx - 1, :, :, time_idx, 3] = Pdot
 
-    #calculate max and min of fields
+    # calculate max and min of fields
     T_max = np.amax(output_data[:, :, :, :, 0])
     T_min = np.amin(output_data[:, :, :, :, 0])
     P_max = np.amax(output_data[:, :, :, :, 1])
     P_min = np.amin(output_data[:, :, :, :, 1])
-    
+
     # Normalize fields to range [-1,1]
     for channel in range(0, 4):
         norm_max = np.amax(output_data[:, :, :, :, channel])
@@ -155,6 +154,7 @@ def parse_data(
     print("shape of output data is: ", output_data.shape)
 
     return microstructure_data, output_data, T_max, T_min, P_max, P_min
+
 
 # todo: not sure if we need this,
 def split_data(

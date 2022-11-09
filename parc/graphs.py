@@ -19,14 +19,14 @@ def visualize_inference(
         time_idx (list[int]):  list of the time index to plot
         case_num (int):        case number to visualize prediction
     """
-    fig,ax = plt.subplots(2,len(time_idx), figsize=(28, 8) )
+    fig, ax = plt.subplots(2, len(time_idx), figsize=(28, 8))
     plt.subplots_adjust(wspace=0.02)
-    
-    #convert time index to nanoseconds
+
+    # convert time index to nanoseconds
     t_idx = np.array(time_idx)
     t_idx = t_idx * (1000000000)
     for i in range(len(t_idx)):
-        t_idx[i] = round(t_idx[i],2)
+        t_idx[i] = round(t_idx[i], 2)
 
     fig, ax = plt.subplots(2, len(time_idx), figsize=(28, 8))
     plt.subplots_adjust(wspace=0.02, hspace=0.04)
@@ -36,14 +36,18 @@ def visualize_inference(
         ax[0][i].clear()
         ax[0][i].set_xticks([])
         ax[0][i].set_yticks([])
-        ax[0][i].imshow(np.squeeze(y_true[case_num,:,:,(i)]), cmap='jet',vmin=-1,vmax=1)
-        #Ground truth graph
+        ax[0][i].imshow(
+            np.squeeze(y_true[case_num, :, :, (i)]), cmap="jet", vmin=-1, vmax=1
+        )
+        # Ground truth graph
         ax[1][i].clear()
         ax[1][i].clear()
         ax[1][i].set_xticks([])
         ax[1][i].set_yticks([])
-        ax[1][i].set_xlabel('Time = '+str(t_idx[i]) + 'ns', color='r')
-        ax[1][i].imshow(np.squeeze(y_pred[case_num,:,:,(i)]), cmap='jet',vmin=-1,vmax=1)
+        ax[1][i].set_xlabel("Time = " + str(t_idx[i]) + "ns", color="r")
+        ax[1][i].imshow(
+            np.squeeze(y_pred[case_num, :, :, (i)]), cmap="jet", vmin=-1, vmax=1
+        )
         ax[0][i].imshow(
             np.squeeze(y_true[case_num, :, :, (i)]), cmap="jet", vmin=-1, vmax=1
         )
@@ -64,13 +68,13 @@ def plot_rmse(all_rmse, t_idx):
     """
     sample_name = "RMSE"
     plt.figure(figsize=[17, 4])
-        
-    #convert time index to nanoseconds
+
+    # convert time index to nanoseconds
     t_idx = np.array(t_idx)
     t_idx = t_idx * (1000000000)
     for i in range(len(t_idx)):
-        t_idx[i] = round(t_idx[i],2)
-    
+        t_idx[i] = round(t_idx[i], 2)
+
     plt.boxplot(
         all_rmse,
         whis=[5, 95],
@@ -101,13 +105,13 @@ def plot_r2(all_r2, t_idx):
 
     sample_name = "R2"
     plt.figure(figsize=[17, 4])
-    
-    #convert time index to nanoseconds
+
+    # convert time index to nanoseconds
     t_idx = np.array(t_idx)
     t_idx = t_idx * (1000000000)
     for i in range(len(t_idx)):
-        t_idx[i] = round(t_idx[i],2)
-    
+        t_idx[i] = round(t_idx[i], 2)
+
     plt.boxplot(
         all_r2,
         whis=[5, 95],
@@ -207,12 +211,14 @@ def plot_sensitivity_temperature(y_true, y_pred, t_idx, tot_cases):
     plt.savefig("temp_growth_plot.png")
     plt.show()
 
+
 def plot_saliency(y_pred, ts):
     """plot of the saliency of the predicted values, shows where the growth originates in prediction
     Args:
         y_pred (np.ndarray): model predicted values for temp
         ts (int): declares which time step to plot the predicted saliency at
-    """  
+    """
+
 
 def plot_saliency(y_pred):
     """plot of the saliency of the predicted values, shows where the growth originates in prediction
