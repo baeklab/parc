@@ -96,8 +96,8 @@ def parse_data(dir_data: str, time_steps: int, del_t: int) -> np.ndarray:
                 previousT = initial_vals[case_idx-1,:,:,0]
                 previousP = initial_vals[case_idx-1,:,:,1]
             else:
-                previousT = output_data[case_idx - 1, :, :, time_idx - 1, 0]
-                previousP = output_data[case_idx - 1, :, :, time_idx - 1, 1]
+                previousT = output_data[case_idx - 1, :, :, time_idx - 2, 0]
+                previousP = output_data[case_idx - 1, :, :, time_idx - 2, 1]
             Tdot = (currentT - previousT) / del_t
             Pdot = (currentP - previousP) / del_t
 
@@ -197,13 +197,14 @@ def wave_map(width: int, height: int):
     return wave_map
 
 def split_data(
-    data_in: np.ndarray, output_data: np.ndarray, splits: list
+    data_in: np.ndarray, output_data: np.ndarray, initial_vals: np.ndarray, splits: list
 ) -> np.ndarray:
     """split the data into training, validation, and testing cases
 
     Args:
         data_in (np.ndarray): microstructure data
         output_data (np.ndarray): temp/pressure/temperature_dot/pressure_dot outputs
+        initial_vals (np.ndarray): initial temp and pressure values
         splits (list[int]): train, val, test split
 
     Returns:
@@ -222,24 +223,30 @@ def split_data(
     print(test)
 
     # Training
-    X_train = data_in[:train, :, :, :]
-    y_train = output_data[:train, :, :, :, :]
+    X_train = data_in[:train]
+    y_train = output_data[:train]
+    X_train_init = initial_vals[:train]
 
     # Validation
-    X_val = data_in[train:valid, :, :, :]
-    y_val = output_data[train:valid, :, :, :, :]
+    X_val = data_in[train:valid]
+    y_val = output_data[train:valid]
+    X_val_init = initial_vals[train:valid]
 
     # Test
-    test_X = data_in[valid:test, :, :, :]
-    test_Y = output_data[valid:test, :, :, :, :]
+    test_X = data_in[valid:test]
+    test_Y = output_data[valid:test]
+    test_X_init = initial_vals[valid:test]
 
     print(X_train.shape)
     print(y_train.shape)
+    print(X_train_init.shape)
     print(X_val.shape)
     print(y_val.shape)
+    print(X_val_init.shape)
     print(test_X.shape)
     print(test_Y.shape)
-    return X_train, y_train, X_val, y_val, test_X, test_Y
+    print(test_X_init.shape)
+    return X_train, y_train, X_train_init, X_val, y_val, X_val_init, test_X, test_Y, test_X_init
 
 
 def reshape_old(new_data: np.ndarray):

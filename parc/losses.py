@@ -19,7 +19,7 @@ def rmse(y_true, y_pred, case_numbers, time_steps):
         for j in range(time_steps):
             rmse = sqrt(
                 mean_squared_error(
-                    y_true[i, :, :, j].flatten(), y_pred[i, :, :, j].flatten()
+                    y_true[i, :, :, j, :].flatten(), y_pred[i, :, :, j, :].flatten()
                 )
             )
             rmse_list.append(rmse)
