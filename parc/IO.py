@@ -54,8 +54,10 @@ def parse_data(dir_data: str, time_steps: int, del_t: int) -> np.ndarray:
         img = img[:, :, 1]
 
         # Combine Microstructure image and distance map
-        microstructure_data[:, :, :, 0] = img
-        microstructure_data[:, :, :, 1] = wave_map
+        microstructure_data[case_idx-1, :, :, 0] = img
+        microstructure_data[case_idx-1, :, :, 1] = wave_map
+        #flip microstructure data to match temp/pressure data
+        microstructure_data[case_idx-1, :, :, 0] = np.flipud(microstructure_data[case_idx-1, :, :, 0])
 
         #initialize temperature and pressure
         temp = np.full((width, height), 300.0)
@@ -76,6 +78,11 @@ def parse_data(dir_data: str, time_steps: int, del_t: int) -> np.ndarray:
             temp = np.reshape(temperature_img, (width, height))
             # clip the temperature value such that it ranges between 300K and 4000K
             temp = np.clip(temp, 300, 4000)
+            
+            #Swap the axis of error cases (temperature)
+            if 16 < case_idx < 23 : 
+                temp = np.swapaxes(temp,0,1)
+
             output_data[case_idx - 1, :, :, time_idx-1, 0] = temp
 
             dir_pressure = osp.join(
@@ -87,6 +94,11 @@ def parse_data(dir_data: str, time_steps: int, del_t: int) -> np.ndarray:
             pressure_img = np.loadtxt(dir_pressure)
             # reshape pressure values to image size
             pressure = np.reshape(pressure_img, (width, height))
+            
+            #Swap the axis of error cases (pressure)
+            if 16 < case_idx < 23 :
+                pressure = np.swapaxes(pressure,0,1)
+                
             output_data[case_idx - 1, :, :, time_idx-1, 1] = pressure
 
             # Calculate T_dot --> T_dot = (T(t+del_t)-T(t))/del_t
@@ -122,7 +134,7 @@ def parse_data(dir_data: str, time_steps: int, del_t: int) -> np.ndarray:
             'max' : P_max,
         }, 
         'Temperature' : {
-            'min' : T_min, 
+            'min' : T_min,  
             'max' : T_max,
         },
         'Pressure_gradient' : {
@@ -135,6 +147,17 @@ def parse_data(dir_data: str, time_steps: int, del_t: int) -> np.ndarray:
         },
     }
     
+    # Normalize initial values to range [-1,1]
+    for channel in range(0, 2):
+        norm_max = np.amax(output_data[:, :, :, :, channel])
+        norm_min = np.amin(output_data[:, :, :, :, channel])
+        initial_vals[:, :, :, channel] = (
+            initial_vals[:, :, :, channel] - norm_min
+        ) / (norm_max - norm_min)
+        initial_vals[:, :, :, channel] = (
+            initial_vals[:, :, :, channel] * 2.0
+        ) - 1.0
+        
     # Normalize fields to range [-1,1]
     for channel in range(0, 4):
         norm_max = np.amax(output_data[:, :, :, :, channel])
@@ -165,6 +188,8 @@ def parse_data(dir_data: str, time_steps: int, del_t: int) -> np.ndarray:
 
     output_data = output_data[:, :480, :480, :, :]
     microstructure_data = microstructure_data[:, :480, :480, :]
+    initial_vals = initial_vals[:, :480, :480, :]
+
 
     # downsample to half of image size
     output_data = skimage.measure.block_reduce(output_data, (1, 2, 2, 1, 1), np.max)
@@ -173,6 +198,11 @@ def parse_data(dir_data: str, time_steps: int, del_t: int) -> np.ndarray:
     )
     microstructure_data[:, :, :, :1] = microstructure_data[:, :, :, :1] > 0
     microstructure_data[:, :, :, :1] = (microstructure_data[:, :, :, :1] * 2.0) - 1.0
+    initial_vals = skimage.measure.block_reduce(
+        initial_vals, (1, 2, 2, 1), np.mean
+    )
+    initial_vals[:, :, :, :1] = initial_vals[:, :, :, :1] > 0
+    initial_vals[:, :, :, :1] = (initial_vals[:, :, :, :1] * 2.0) - 1.0
 
     print("Finished Processing Data")
     print("shape of microstructure data is: ", microstructure_data.shape)
@@ -324,3 +354,34 @@ def reshape_new(old_data: np.ndarray, channels=4):
     print("Reformatted data shape: ", new_data.shape)
 
     return new_data
+    
+def rescale(normalized_data: np.ndarray, norm_min, norm_max):
+    """rescales data from normalized to full scale output
+    Args:
+        normalized_data (np.ndarray): output data normalized from -1 to 1
+        norm_min (int): minimum value for unscaled data
+        norm_max (int): maximum value for unscaled data
+    Returns:
+        rescaled (np.ndarray): unnormalized data
+    """
+    rescaled = (normalized_data+1.0)/2.0
+    rescaled = (rescaled*(norm_max-norm_min))+norm_min
+    
+    return rescaled
+    
+def calculatederivative(input_data:np.ndarray,del_t:int):
+    """calculates the derivate
+    Args:
+        input_data (np.ndarray): data to calculate derivative for
+        del_t (int): time derivative scale
+    Returns:
+        derivative (np.ndarray): derivative data
+    """
+    derivative = []
+    for time_idx in range(input_data.shape[0]-1):
+        current = input_data[time_idx+1]
+        previous = input_data[time_idx]
+        dot = (current - previous) / del_t
+        derivative.append(dot)
+        
+    return derivative

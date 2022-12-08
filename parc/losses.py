@@ -5,21 +5,21 @@ import tensorflow as tf
 import keras.backend as K
 
 
-def rmse(y_true, y_pred, case_numbers, time_steps):
+def rmse(y_true, y_pred): 
     """Root mean squared error calculation between true and predicted cases
     Args:
         y_true (np.ndarray): true values for temp/press found in input dataset
         y_pred (np.ndarray): model predicted values for temp/press
-        case_numbers (int) : number of cases to calculate rmse values for
-        time_steps (int)   : number of time steps to iterate through
+        norm_max (int): maximum value of unscaled data
+        norm_min (int): minimum value of unscaled data
     """
     all_rmse = []
-    for i in range(case_numbers):
+    for i in range(y_true.shape[0]):
         rmse_list = []
-        for j in range(time_steps):
+        for j in range(y_true.shape[3]):
             rmse = sqrt(
                 mean_squared_error(
-                    y_true[i, :, :, j, :].flatten(), y_pred[i, :, :, j, :].flatten()
+                    y_true[i, :, :, j].flatten(), y_pred[i, :, :, j].flatten()
                 )
             )
             rmse_list.append(rmse)
@@ -30,7 +30,7 @@ def rmse(y_true, y_pred, case_numbers, time_steps):
     return all_rmse
 
 
-def r2(y_true, y_pred, case_numbers, time_steps):
+def r2(y_true, y_pred):
     """R2 score calculation between true and predicted cases
     Args:
         y_true (np.ndarray): true values for temp/press found in input dataset
@@ -39,9 +39,9 @@ def r2(y_true, y_pred, case_numbers, time_steps):
         time_steps (int)   : number of time steps to iterate through
     """
     all_r2 = []
-    for i in range(case_numbers):
+    for i in range(y_true.shape[0]):
         r2_list = []
-        for j in range(time_steps):
+        for j in range(y_true.shape[3]):
             r2 = r2_score(y_true[i, :, :, j].flatten(), y_pred[i, :, :, j].flatten())
             r2_list.append(r2)
         all_r2.append(np.array(r2_list))
@@ -149,60 +149,85 @@ def sensitivity_single_sample(test_data):
     """single sample sensitivity calculation
     Args:
         test_data (np.ndarray): prediction temp/press values to test sensitivity
+        norm_max (int): maximum value of unscaled data
+        norm_min (int): minimum value of unscaled data
     """
-
-    threshold = 0.1554
+    threshold = 875 #875 Temperature (K)
     area_list = []
-    # Rescale the output
-    test_data = (test_data + 1.0) / 2.0
+    temp_list = []
 
     # Calculate area and avg hotspot
     for i in range(test_data.shape[2]):
         pred_slice = test_data[:, :, i]
         pred_mask = pred_slice > threshold
         pred_hotspot_area = np.count_nonzero(pred_mask)
-        area_list.append(pred_hotspot_area)
+        rescaled_area = pred_hotspot_area * ((2*25/485)**2)
+        area_list.append(rescaled_area)
+        masked_pred = pred_slice*pred_mask
+    
+        if pred_hotspot_area ==0:
+            pred_avg_temp=0.0
+        else:
+            pred_avg_temp = np.sum(masked_pred)/pred_hotspot_area
+        temp_list.append(pred_avg_temp)
+        
+    return area_list, temp_list
 
-    return area_list
 
-
-def Calculate_avg_sensitivity(y_true, y_pred, tot_cases):
+def Calculate_avg_sensitivity(y_true, y_pred):
     """average sensitivity calculation between prediction and true values
     Args:
         y_true (np.ndarray): true values for temp/press found in input dataset
         y_pred (np.ndarray): model predicted values for temp/press
-        tot_cases (int) : number of cases tested
     """
-
+    whole_temp = []
     whole_area = []
-    for i in range(tot_cases):
-        area_gt_list = sensitivity_single_sample(y_pred[i, :, :, :])
-        whole_area.append(area_gt_list)
+    for i in range(y_true.shape[0]):
+        area_pred_list,temp_pred_list = sensitivity_single_sample(y_pred[i, :, :, :])
+        whole_temp.append(temp_pred_list)
+        whole_area.append(area_pred_list)
 
+    whole_temp = np.array(whole_temp)
     whole_area = np.array(whole_area)
 
-    area_mean = np.mean(whole_area, axis=0)
+    temp_mean = np.mean(whole_temp,axis=0)
+    area_mean = np.mean(whole_area,axis=0)
 
-    area_error1 = np.percentile(whole_area, 95, axis=0)
-    area_error2 = np.percentile(whole_area, 5, axis=0)
+    temp_error1 = np.percentile(whole_temp,95,axis=0)
+    temp_error2 = np.percentile(whole_temp,5,axis=0)
+    area_error1 =np.percentile(whole_area,95,axis=0)
+    area_error2 =np.percentile(whole_area,5,axis=0)
 
+    gt_whole_temp = []
     gt_whole_area = []
-
-    for i in range(tot_cases):
-        area_pred_list = sensitivity_single_sample(y_true[i, :, :, :])
-        gt_whole_area.append(area_pred_list)
+    
+    for i in range(y_true.shape[0]):
+        area_gt_list,temp_gt_list = sensitivity_single_sample(y_true[i, :, :, :])
+        gt_whole_temp.append(temp_gt_list)
+        gt_whole_area.append(area_gt_list)
+    gt_whole_temp = np.array(gt_whole_temp)
     gt_whole_area = np.array(gt_whole_area)
 
-    gt_area_mean = np.mean(gt_whole_area, axis=0)
-
-    gt_area_error1 = np.percentile(gt_whole_area, 95, axis=0)
-    gt_area_error2 = np.percentile(gt_whole_area, 5, axis=0)
+    gt_temp_mean = np.mean(gt_whole_temp,axis=0)
+    gt_area_mean = np.mean(gt_whole_area,axis=0)
+    
+    gt_temp_error1 = np.percentile(gt_whole_temp,95,axis=0)
+    gt_temp_error2 = np.percentile(gt_whole_temp,5,axis=0)
+    
+    gt_area_error1 =np.percentile(gt_whole_area,95,axis=0)
+    gt_area_error2 =np.percentile(gt_whole_area,5,axis=0)
 
     return (
+        temp_mean,
         area_mean,
+        temp_error1,
+        temp_error2,
         area_error1,
         area_error2,
+        gt_temp_mean,
         gt_area_mean,
+        gt_temp_error1,
+        gt_temp_error2,
         gt_area_error1,
-        gt_area_error2,
+        gt_area_error2
     )
