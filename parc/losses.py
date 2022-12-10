@@ -174,7 +174,7 @@ def sensitivity_single_sample(test_data):
     return area_list, temp_list
 
 
-def Calculate_avg_sensitivity(y_true, y_pred):
+def calculate_avg_sensitivity(y_true, y_pred):
     """average sensitivity calculation between prediction and true values
     Args:
         y_true (np.ndarray): true values for temp/press found in input dataset

@@ -339,7 +339,7 @@ class PARC(keras.Model):
             inputs=[self.input_layer1, self.input_layer2], outputs=self.out
         )
 
-    def call(self, inputs, training=False):
+    def call(self, inputs, training=True):
         microstructure = inputs[0]
         F_initial = inputs[1]
 

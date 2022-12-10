@@ -123,7 +123,7 @@ def plot_hotspot_area(y_true, y_pred, t_idx):
         gt_temp_error2,
         gt_area_error1,
         gt_area_error2
-    ) = losses.Calculate_avg_sensitivity(
+    ) = losses.calculate_avg_sensitivity(
         y_true[:, :, :, :], y_pred[:, :, :, :]
     )
         
@@ -167,7 +167,7 @@ def plot_hotspot_temperature(y_true, y_pred, t_idx):
         gt_temp_error2,
         gt_area_error1,
         gt_area_error2
-    ) = losses.Calculate_avg_sensitivity(
+    ) = losses.calculate_avg_sensitivity(
         y_true[:, :, :, :], y_pred[:, :, :, :]
     )
     
@@ -212,18 +212,18 @@ def plot_hotspot_area_dot(y_true, y_pred, t_idx, del_t):
         gt_temp_error2,
         gt_area_error1,
         gt_area_error2
-    ) = losses.Calculate_avg_sensitivity(
+    ) = losses.calculate_avg_sensitivity(
         y_true[:, :, :, :], y_pred[:, :, :, :]
     )
     
     A_dot = []
     A_dot_gt = []
-    A_dot = IO.calculatederivative(area_mean,del_t)
-    A_dot_gt = IO.calculatederivative(gt_area_mean,del_t) 
-    gt_area_error1 = IO.calculatederivative(gt_area_error1,del_t)
-    gt_area_error2 = IO.calculatederivative(gt_area_error2,del_t) 
-    area_error1 = IO.calculatederivative(area_error1,del_t)
-    area_error2 = IO.calculatederivative(area_error2,del_t) 
+    A_dot = IO.calculate_derivative(area_mean,del_t)
+    A_dot_gt = IO.calculate_derivative(gt_area_mean,del_t) 
+    gt_area_error1 = IO.calculate_derivative(gt_area_error1,del_t)
+    gt_area_error2 = IO.calculate_derivative(gt_area_error2,del_t) 
+    area_error1 = IO.calculate_derivative(area_error1,del_t)
+    area_error2 = IO.calculate_derivative(area_error2,del_t) 
 
     plt.figure(figsize=(6, 4)) 
 
@@ -266,18 +266,18 @@ def plot_hotspot_temp_dot(y_true, y_pred, t_idx, del_t):
         gt_temp_error2,
         gt_area_error1,
         gt_area_error2
-    ) = losses.Calculate_avg_sensitivity(
+    ) = losses.calculate_avg_sensitivity(
         y_true[:, :, :, :], y_pred[:, :, :, :]
     )
     
     T_dot = []
     T_dot_gt = []
-    T_dot = IO.calculatederivative(temp_mean,del_t)
-    T_dot_gt = IO.calculatederivative(gt_temp_mean,del_t) 
-    gt_temp_error1 = IO.calculatederivative(gt_temp_error1,del_t)
-    gt_temp_error2 = IO.calculatederivative(gt_temp_error2,del_t) 
-    temp_error1 = IO.calculatederivative(temp_error1,del_t)
-    temp_error2 = IO.calculatederivative(temp_error2,del_t) 
+    T_dot = IO.calculate_derivative(temp_mean,del_t)
+    T_dot_gt = IO.calculate_derivative(gt_temp_mean,del_t) 
+    gt_temp_error1 = IO.calculate_derivative(gt_temp_error1,del_t)
+    gt_temp_error2 = IO.calculate_derivative(gt_temp_error2,del_t) 
+    temp_error1 = IO.calculate_derivative(temp_error1,del_t)
+    temp_error2 = IO.calculate_derivative(temp_error2,del_t) 
 
     plt.figure(figsize=(6, 4))     
  

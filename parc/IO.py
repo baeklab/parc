@@ -369,7 +369,7 @@ def rescale(normalized_data: np.ndarray, norm_min, norm_max):
     
     return rescaled
     
-def calculatederivative(input_data:np.ndarray,del_t:int):
+def calculate_derivative(input_data:np.ndarray,del_t:int):
     """calculates the derivate
     Args:
         input_data (np.ndarray): data to calculate derivative for
