@@ -22,8 +22,9 @@ def visualize_inference(
         case_num (int):        case number to visualize prediction
     """
 
-    fig, ax = plt.subplots(2, len(t_idx), figsize=(28, 8))
-    plt.subplots_adjust(left=.125, bottom=.65, right=.9, top=.9, wspace=0.02, hspace=0.04)
+    t_idx = [round(item, 2) for item in t_idx]
+    fig, ax = plt.subplots(2, len(t_idx), figsize=(len(t_idx)*2, 8))
+    plt.subplots_adjust(left=.125, bottom=.65, right=.65, top=.9, wspace=0.01, hspace=0.04)
     for i in range(len(t_idx)):
         # Prediction graph
         ax[0][i].clear()
@@ -36,7 +37,7 @@ def visualize_inference(
         ax[1][i].clear()
         ax[1][i].set_xticks([])
         ax[1][i].set_yticks([])
-        ax[1][i].set_xlabel('Time = '+str(t_idx[i]) + 'ns', color='r')
+        ax[1][i].set_xlabel(str(t_idx[i]) + 'ns', color='r')
         ax[1][i].imshow(
             np.squeeze(y_pred[case_num, :, :, (i)]), cmap="jet", vmin = norm_min, vmax = norm_max
         )
@@ -51,6 +52,7 @@ def plot_rmse(all_rmse, t_idx):
     """
     sample_name = "RMSE"
     plt.figure(figsize=[17, 4])
+    t_idx = [round(item, 2) for item in t_idx]
 
     plt.boxplot(
         all_rmse,
@@ -73,7 +75,7 @@ def plot_rmse(all_rmse, t_idx):
     plt.show()
 
 
-def plot_r2(all_r2, t_idx):
+def plot_r2(all_r2, t_idx): 
     """R2 score plot using r2 scores calculated in losses module, plotted as a boxplot
     Args:
         all_r2 : R2 score
@@ -82,6 +84,7 @@ def plot_r2(all_r2, t_idx):
 
     sample_name = "R2"
     plt.figure(figsize=[17, 4])
+    t_idx = [round(item, 2) for item in t_idx]
 
     plt.boxplot(
         all_r2,
@@ -301,14 +304,15 @@ def plot_hotspot_temp_dot(y_true, y_pred, t_idx, del_t):
     plt.show()
     
     
-def plot_saliency(y_pred,ts):
+def plot_saliency(y_pred,cn,ts):
     """plot of the saliency of the predicted values, shows where the growth originates in prediction
     Args:
         y_pred (np.ndarray): model predicted values for temp
+        cn (int): which case number to display saliency at
         ts (int): which timestep to display saliency at
     """ 
     threshold = 875  # 875 Temperature(K), max hotspot temperature threshold
-    pred_data = np.squeeze(y_pred[0, :, :, ts])
+    pred_data = np.squeeze(y_pred[cn, :, :, ts])
     pred_mask = pred_data > threshold
 
     plt.imshow(np.squeeze(pred_mask), cmap="coolwarm", vmin=-0.0, vmax=1.0)

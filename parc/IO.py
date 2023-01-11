@@ -343,13 +343,19 @@ def reshape_new(old_data: np.ndarray, channels=4):
                 new_data[case_idx, :, :, time_idx, 3] = old_data[
                     case_idx, :, :, (2 * time_steps) + (2 * time_idx) + 1
                 ]
-        if channels == 2:
+        if channels == 2: 
             for time_idx in range(time_steps):
                 new_data[case_idx, :, :, time_idx, 0] = old_data[
-                    case_idx, :, :, (2 * time_idx)
+                    case_idx, :, :, (time_idx)
                 ]
+            for time_idx in range(time_steps):
                 new_data[case_idx, :, :, time_idx, 1] = old_data[
-                    case_idx, :, :, (2 * time_idx) + 1
+                    case_idx, :, :, (time_steps + time_idx)
+                ]
+        if channels == 1:
+            for time_idx in range(time_steps):
+                new_data[case_idx, :, :, time_idx, 0] = old_data[
+                    case_idx, :, :, (time_idx)
                 ]
     print("Reformatted data shape: ", new_data.shape)
 
