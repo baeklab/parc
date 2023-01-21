@@ -219,7 +219,7 @@ def wave_map(width: int, height: int):
         height (int): size of image height in pixels
 
     Returns:
-        wave_map
+        wave_map (np.ndarray): distance map for point positioning
     """
     wave_map = np.zeros((width, height))
     for w in range(1, width):
@@ -313,10 +313,12 @@ def reshape_old(new_data: np.ndarray):
     return old_data
 
 
-def reshape_new(old_data: np.ndarray, channels=4):
+def reshape_new(old_data: np.ndarray, channels:int=4, fields:int=2):
     """reshapes data from old format to new (4 dimensional to 5 dimensional)
     Args:
         old_data (np.ndarray): output data in 4 dimensional format
+        channels (int): number of channels for reshaping
+        fields (int): number of fields needed to reshape
     Returns:
         new_data (np.ndarray): output data in 5 dimensional format
     """
@@ -343,7 +345,15 @@ def reshape_new(old_data: np.ndarray, channels=4):
                 new_data[case_idx, :, :, time_idx, 3] = old_data[
                     case_idx, :, :, (2 * time_steps) + (2 * time_idx) + 1
                 ]
-        if channels == 2: 
+        if channels == 2 and fields == 2:
+            for time_idx in range(time_steps):
+                new_data[case_idx, :, :, time_idx, 0] = old_data[
+                    case_idx, :, :, (2*time_idx)
+                ]
+                new_data[case_idx, :, :, time_idx, 1] = old_data[
+                    case_idx, :, :, ((2*time_idx) + 1)
+                ]
+        if channels == 2 and fields == 1: 
             for time_idx in range(time_steps):
                 new_data[case_idx, :, :, time_idx, 0] = old_data[
                     case_idx, :, :, (time_idx)
@@ -361,7 +371,7 @@ def reshape_new(old_data: np.ndarray, channels=4):
 
     return new_data
     
-def rescale(normalized_data: np.ndarray, norm_min, norm_max):
+def rescale(normalized_data: np.ndarray, norm_min: int, norm_max: int):
     """rescales data from normalized to full scale output
     Args:
         normalized_data (np.ndarray): output data normalized from -1 to 1
@@ -375,19 +385,21 @@ def rescale(normalized_data: np.ndarray, norm_min, norm_max):
     
     return rescaled
     
-def calculate_derivative(input_data:np.ndarray,del_t:int):
-    """calculates the derivate
+def calculate_derivative(input_data: np.ndarray, t_idx: list):
+    """calculates the derivate for each time step in input data set
     Args:
-        input_data (np.ndarray): data to calculate derivative for
-        del_t (int): time derivative scale
+        input_data (np.ndarray): data to calculate derivative of
+        t_idx (list[int]) : time index of the test cases
     Returns:
         derivative (np.ndarray): derivative data
     """
-    derivative = []
-    for time_idx in range(input_data.shape[0]-1):
-        current = input_data[time_idx+1]
-        previous = input_data[time_idx]
-        dot = (current - previous) / del_t
-        derivative.append(dot)
+    derivative = np.zeros((input_data.shape[0],input_data.shape[1]-1))
+    for case_idx in range(input_data.shape[0]):
+        for time_idx in range(input_data.shape[1]-1):
+            current = input_data[case_idx,time_idx+1]
+            previous = input_data[case_idx,time_idx]
+            del_t = t_idx[time_idx+1] - t_idx[time_idx]
+            dot = (current - previous) / del_t
+            derivative[case_idx,time_idx] = dot
         
     return derivative
