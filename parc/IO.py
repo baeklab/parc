@@ -279,94 +279,58 @@ def split_data(
     return X_train, y_train, X_train_init, X_val, y_val, X_val_init, test_X, test_Y, test_X_init
 
 
-def reshape_old(new_data: np.ndarray):
-    """reshapes data from new format to old (5 dimensional to 4 dimensional)
+def reshape_old(new_data: np.ndarray, n_fields: int):
+    """reshapes data from new format to old (5 dimensional to 4 dimensional), assumes each field has a respective derivative
     Args:
         new_data (np.ndarray): output data in 5 dimensional format
+        n_fields (int): number of fields in the input data to be converted (ex. temp, press, etc.)
     Returns:
         old_data (np.ndarray): output data in 4 dimensional format
     """
     case_numbers = new_data.shape[0]
     time_steps = new_data.shape[3]
     img_size = new_data.shape[2]
-    old_data = np.zeros((case_numbers, img_size, img_size, (time_steps * 4)))
+    old_data = np.zeros((case_numbers, img_size, img_size, (time_steps * n_fields * 2)))
     print("Starting shape of data: ", new_data.shape)
 
-    for case_idx in range(case_numbers):
-        for time_idx in range(1,time_steps+1):
-            old_data[case_idx, :, :, (2 * time_idx)-2] = new_data[
-                case_idx, :, :, (time_idx-1), 0
-            ]
-            old_data[case_idx, :, :, (2 * time_idx) - 1] = new_data[
-                case_idx, :, :, (time_idx-1), 1
-            ]
-        for time_idx in range(1,time_steps+1):
-            old_data[case_idx, :, :, (2 * (time_steps-1)) + (2 * time_idx)] = new_data[
-                case_idx, :, :, (time_idx-1), 2
-            ]
-            old_data[case_idx, :, :, (2 * (time_steps-1)) + (2 * time_idx) + 1] = new_data[
-                case_idx, :, :, (time_idx-1), 3
-            ]
+    for field_idx in range(n_fields):
+        for case_idx in range(case_numbers):
+            for time_idx in range(time_steps):
+                old_data[case_idx, :, :, ((n_fields * (time_idx)) + field_idx)] = new_data[
+                    case_idx, :, :, time_idx, (field_idx*2)
+                ]
+                old_data[case_idx, :, :, (time_steps * n_fields) + (n_fields * (time_idx)) + field_idx] = new_data[
+                    case_idx, :, :,time_idx, (field_idx*2)+1
+                ]
 
     print("Reformatted data shape: ", old_data.shape)
 
     return old_data
 
 
-def reshape_new(old_data: np.ndarray, channels:int=4, fields:int=2):
+def reshape_new(old_data: np.ndarray, n_fields: int):
     """reshapes data from old format to new (4 dimensional to 5 dimensional)
     Args:
         old_data (np.ndarray): output data in 4 dimensional format
-        channels (int): number of channels for reshaping
+        channels (int): number of output channels for reshaping
         fields (int): number of fields needed to reshape
     Returns:
         new_data (np.ndarray): output data in 5 dimensional format
     """
     case_numbers = old_data.shape[0]
-    time_steps = (old_data.shape[3]) / channels
-    time_steps = int(time_steps)
+    time_steps = int((old_data.shape[3]) / (n_fields*2))
     img_size = old_data.shape[2]
-    new_data = np.zeros((case_numbers, img_size, img_size, time_steps, channels))
+    new_data = np.zeros((case_numbers, img_size, img_size, time_steps, (n_fields*2)))
     print("Starting shape of data: ", old_data.shape)
 
-    for case_idx in range(case_numbers):
-        if channels == 4:
+    for field_idx in range(n_fields):
+        for case_idx in range(case_numbers):
             for time_idx in range(time_steps):
-                new_data[case_idx, :, :, time_idx, 0] = old_data[
-                    case_idx, :, :, (2 * time_idx)
-                ]
-                new_data[case_idx, :, :, time_idx, 1] = old_data[
-                    case_idx, :, :, (2 * time_idx) + 1
-                ]
-            for time_idx in range(time_steps):
-                new_data[case_idx, :, :, time_idx, 2] = old_data[
-                    case_idx, :, :, (2 * time_steps) + (2 * time_idx)
-                ]
-                new_data[case_idx, :, :, time_idx, 3] = old_data[
-                    case_idx, :, :, (2 * time_steps) + (2 * time_idx) + 1
-                ]
-        if channels == 2 and fields == 2:
-            for time_idx in range(time_steps):
-                new_data[case_idx, :, :, time_idx, 0] = old_data[
-                    case_idx, :, :, (2*time_idx)
-                ]
-                new_data[case_idx, :, :, time_idx, 1] = old_data[
-                    case_idx, :, :, ((2*time_idx) + 1)
-                ]
-        if channels == 2 and fields == 1: 
-            for time_idx in range(time_steps):
-                new_data[case_idx, :, :, time_idx, 0] = old_data[
-                    case_idx, :, :, (time_idx)
-                ]
-            for time_idx in range(time_steps):
-                new_data[case_idx, :, :, time_idx, 1] = old_data[
-                    case_idx, :, :, (time_steps + time_idx)
-                ]
-        if channels == 1:
-            for time_idx in range(time_steps):
-                new_data[case_idx, :, :, time_idx, 0] = old_data[
-                    case_idx, :, :, (time_idx)
-                ]
+                new_data[case_idx, :, :, time_idx, (field_idx*2)] = old_data[
+                    case_idx, :, :, ((n_fields * (time_idx)) + field_idx)]
+                new_data[case_idx, :, :,time_idx, (field_idx*2)+1] = old_data[
+                    case_idx, :, :, (time_steps * n_fields) + (n_fields * (time_idx)) + field_idx]
+    
     print("Reformatted data shape: ", new_data.shape)
 
     return new_data
