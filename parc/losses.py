@@ -5,7 +5,8 @@ import tensorflow as tf
 import keras.backend as K
 from parc import IO
 
-def rmse(y_true: np.ndarray, y_pred: np.ndarray): 
+
+def rmse(y_true: np.ndarray, y_pred: np.ndarray):
     """Root mean squared error calculation between true and predicted cases
     Args:
         y_true (np.ndarray): true values for temp or pressure found in input dataset
@@ -65,7 +66,7 @@ def step_weighted_loss(y_true: np.ndarray, y_pred: np.ndarray, weight_loss: list
         y_true[:, :, :, :6] - y_pred[:, :, :, :6]
     )
     squared_diff_init = tf.reduce_mean(_squared_diff_init, axis=3)
-    
+
     _squared_diff_mid = weight_loss[1] * tf.square(
         y_true[:, :, :, :6:11] - y_pred[:, :, :, 6:11]
     )
@@ -75,20 +76,22 @@ def step_weighted_loss(y_true: np.ndarray, y_pred: np.ndarray, weight_loss: list
         y_true[:, :, :, 11:] - y_pred[:, :, :, 11:]
     )
     squared_diff_late = tf.reduce_mean(_squared_diff_late, axis=3)
-       
+
     squared_sum = squared_diff_init + squared_diff_mid + squared_diff_late
 
     loss_cv = tf.reduce_mean(squared_sum, axis=1)
     loss_cv = tf.reduce_mean(loss_cv, axis=1)
-    
+
     return loss_cv
 
 
-def step_weighted_physical_loss(y_true: np.ndarray, y_pred: np.ndarray, loss_cv: tf.Tensor):
+def step_weighted_physical_loss(
+    y_true: np.ndarray, y_pred: np.ndarray, loss_cv: tf.Tensor
+):
     """calculates physical loss using weighted steps
     Args:
         y_true (np.ndarray): true values for temp or pressure found in input dataset
-        y_pred (np.ndarray): model predicted values for temp or pressure 
+        y_pred (np.ndarray): model predicted values for temp or pressure
         loss_cv (tf.tensor): state loss
     Returns:
         loss (tf.Tensor): total loss for each case
@@ -120,7 +123,7 @@ def step_weighted_physical_loss(y_true: np.ndarray, y_pred: np.ndarray, loss_cv:
     loss_ht = tf.reduce_mean(loss_ht, axis=1)
 
     loss = loss_cv + 5 * loss_ht
-    
+
     return loss
 
 
@@ -147,7 +150,7 @@ def state_weighted_loss(y_true: np.ndarray, y_pred: np.ndarray):
 
     loss = tf.reduce_mean(squared_sum, axis=1)
     loss = tf.reduce_mean(loss, axis=1)
-    
+
     return loss
 
 
@@ -168,17 +171,18 @@ def sensitivity_single_sample(test_data: np.ndarray, threshold: int):
         pred_slice = test_data[:, :, i]
         pred_mask = pred_slice > threshold
         pred_hotspot_area = np.count_nonzero(pred_mask)
-        rescaled_area = pred_hotspot_area * ((2*25/485)**2)
+        rescaled_area = pred_hotspot_area * ((2 * 25 / 485) ** 2)
         area_list.append(rescaled_area)
-        masked_pred = pred_slice*pred_mask
-    
-        if pred_hotspot_area ==0:
-            pred_avg_temp=0.0
+        masked_pred = pred_slice * pred_mask
+
+        if pred_hotspot_area == 0:
+            pred_avg_temp = 0.0
         else:
-            pred_avg_temp = np.sum(masked_pred)/pred_hotspot_area
+            pred_avg_temp = np.sum(masked_pred) / pred_hotspot_area
         temp_list.append(pred_avg_temp)
-        
+
     return area_list, temp_list
+
 
 def mean_percentile(whole_data: np.ndarray):
     """calculates mean of data set and the 95th percentiles for error bar visualization
@@ -189,13 +193,16 @@ def mean_percentile(whole_data: np.ndarray):
         error1 (np.ndarray): upper percentile of data
         error2 (np.ndarray): lower percentile of data
     """
-    mean = np.mean(whole_data,axis=0)
-    error1 = np.percentile(whole_data,95,axis=0)
-    error2 = np.percentile(whole_data,5,axis=0)
+    mean = np.mean(whole_data, axis=0)
+    error1 = np.percentile(whole_data, 95, axis=0)
+    error2 = np.percentile(whole_data, 5, axis=0)
 
     return mean, error1, error2
 
-def calculate_avg_sensitivity(y_true: np.ndarray, y_pred: np.ndarray, t_idx: list, threshold: int):
+
+def calculate_avg_sensitivity(
+    y_true: np.ndarray, y_pred: np.ndarray, t_idx: list, threshold: int
+):
     """calculation of mean hotspot area and temperature with error ranges for prediction and true values
     Args:
         y_true (np.ndarray): true values for temp or pressure found in input dataset
@@ -208,88 +215,91 @@ def calculate_avg_sensitivity(y_true: np.ndarray, y_pred: np.ndarray, t_idx: lis
     whole_temp = []
     whole_area = []
     for i in range(y_pred.shape[0]):
-        area_pred_list,temp_pred_list = sensitivity_single_sample(y_pred[i, :, :, :],threshold)
+        area_pred_list, temp_pred_list = sensitivity_single_sample(
+            y_pred[i, :, :, :], threshold
+        )
         whole_temp.append(temp_pred_list)
         whole_area.append(area_pred_list)
 
     whole_temp = np.array(whole_temp)
     whole_area = np.array(whole_area)
-    
+
     temp_mean, temp_error1, temp_error2 = mean_percentile(whole_temp)
     area_mean, area_error1, area_error2 = mean_percentile(whole_area)
-    
+
     gt_whole_temp = []
     gt_whole_area = []
-    
+
     for i in range(y_true.shape[0]):
-        area_gt_list,temp_gt_list = sensitivity_single_sample(y_true[i, :, :, :],threshold)
+        area_gt_list, temp_gt_list = sensitivity_single_sample(
+            y_true[i, :, :, :], threshold
+        )
         gt_whole_temp.append(temp_gt_list)
         gt_whole_area.append(area_gt_list)
     gt_whole_temp = np.array(gt_whole_temp)
     gt_whole_area = np.array(gt_whole_area)
-    
+
     gt_temp_mean, gt_temp_error1, gt_temp_error2 = mean_percentile(gt_whole_temp)
     gt_area_mean, gt_area_error1, gt_area_error2 = mean_percentile(gt_whole_area)
-    
+
     whole_temp_deriv = IO.calculate_derivative(whole_temp, t_idx)
     whole_area_deriv = IO.calculate_derivative(whole_area, t_idx)
-    
+
     T_dot, temp_error1_deriv, temp_error2_deriv = mean_percentile(whole_temp_deriv)
     A_dot, area_error1_deriv, area_error2_deriv = mean_percentile(whole_area_deriv)
 
     gt_temp_deriv = IO.calculate_derivative(gt_whole_temp, t_idx)
     gt_area_deriv = IO.calculate_derivative(gt_whole_area, t_idx)
-    
-    T_dot_gt, gt_temp_error1_deriv, gt_temp_error2_deriv = mean_percentile(gt_temp_deriv)
-    A_dot_gt, gt_area_error1_deriv, gt_area_error2_deriv = mean_percentile(gt_area_deriv)
-    
-    
-    #create dictionary for mean and error values
+
+    T_dot_gt, gt_temp_error1_deriv, gt_temp_error2_deriv = mean_percentile(
+        gt_temp_deriv
+    )
+    A_dot_gt, gt_area_error1_deriv, gt_area_error2_deriv = mean_percentile(
+        gt_area_deriv
+    )
+
+    # create dictionary for mean and error values
     mean_error = {
-        'Prediction' : {
-            'Temperature' : {
-                'mean' : temp_mean, 
-                'error1' : temp_error1,
-                'error2' : temp_error2
-            }, 
-            'Area' : {
-                'mean' : area_mean,
-                'error1' : area_error1,
-                'error2' : area_error2
+        "Prediction": {
+            "Temperature": {
+                "mean": temp_mean,
+                "error1": temp_error1,
+                "error2": temp_error2,
             },
-            'Temperature_gradient' : {
-                'mean' : T_dot, 
-                'error1' : temp_error1_deriv,
-                'error2' : temp_error2_deriv
+            "Area": {"mean": area_mean, "error1": area_error1, "error2": area_error2},
+            "Temperature_gradient": {
+                "mean": T_dot,
+                "error1": temp_error1_deriv,
+                "error2": temp_error2_deriv,
             },
-            'Area_gradient' : {
-                'mean' : A_dot, 
-                'error1' : area_error1_deriv,
-                'error2' : area_error2_deriv
+            "Area_gradient": {
+                "mean": A_dot,
+                "error1": area_error1_deriv,
+                "error2": area_error2_deriv,
             },
         },
-        'Ground_truth' : {
-            'Temperature' : {
-                'mean' : gt_temp_mean, 
-                'error1' : gt_temp_error1,
-                'error2' : gt_temp_error2
-            }, 
-            'Area' : {
-                'mean' : gt_area_mean,
-                'error1' : gt_area_error1,
-                'error2' : gt_area_error2
+        "Ground_truth": {
+            "Temperature": {
+                "mean": gt_temp_mean,
+                "error1": gt_temp_error1,
+                "error2": gt_temp_error2,
             },
-            'Temperature_gradient' : {
-                'mean' : T_dot_gt, 
-                'error1' : gt_temp_error1_deriv,
-                'error2' : gt_temp_error2_deriv
+            "Area": {
+                "mean": gt_area_mean,
+                "error1": gt_area_error1,
+                "error2": gt_area_error2,
             },
-            'Area_gradient' : {
-                'mean' : A_dot_gt, 
-                'error1' : gt_area_error1_deriv,
-                'error2' : gt_area_error2_deriv
+            "Temperature_gradient": {
+                "mean": T_dot_gt,
+                "error1": gt_temp_error1_deriv,
+                "error2": gt_temp_error2_deriv,
             },
-        }
+            "Area_gradient": {
+                "mean": A_dot_gt,
+                "error1": gt_area_error1_deriv,
+                "error2": gt_area_error2_deriv,
+            },
+        },
     }
-    
+
     return mean_error

@@ -14,7 +14,7 @@ class PARC(keras.Model):
 
         # derivitave solver initialization
         self.deriv_res_block1_conv0 = keras.layers.Conv2D(
-            self.n_featuremaps/2,
+            self.n_featuremaps / 2,
             3,
             activation="relu",
             padding="same",
@@ -23,7 +23,7 @@ class PARC(keras.Model):
             name="deriv_1_0",
         )
         self.deriv_res_block1_conv1 = keras.layers.Conv2D(
-            self.n_featuremaps/2,
+            self.n_featuremaps / 2,
             3,
             activation="relu",
             padding="same",
@@ -32,7 +32,7 @@ class PARC(keras.Model):
             name="deriv_1_1",
         )
         self.deriv_res_block1_conv2 = keras.layers.Conv2D(
-            self.n_featuremaps/2,
+            self.n_featuremaps / 2,
             3,
             padding="same",
             kernel_initializer="he_normal",
@@ -77,7 +77,7 @@ class PARC(keras.Model):
             name="deriv_3_0",
         )
         self.deriv_res_block3_conv1 = keras.layers.Conv2D(
-            self.n_featuremaps/2,
+            self.n_featuremaps / 2,
             1,
             activation="relu",
             padding="same",
@@ -86,7 +86,7 @@ class PARC(keras.Model):
             name="deriv_3_1",
         )
         self.deriv_res_block3_conv2 = keras.layers.Conv2D(
-            self.n_featuremaps/4,
+            self.n_featuremaps / 4,
             1,
             activation="relu",
             padding="same",
@@ -107,7 +107,7 @@ class PARC(keras.Model):
 
         # initialize integral block structure
         self.int_res_block1_conv0 = keras.layers.Conv2D(
-            self.n_featuremaps/2,
+            self.n_featuremaps / 2,
             3,
             activation="relu",
             padding="same",
@@ -116,7 +116,7 @@ class PARC(keras.Model):
             name="int_1_0",
         )
         self.int_res_block1_conv1 = keras.layers.Conv2D(
-            self.n_featuremaps/2,
+            self.n_featuremaps / 2,
             3,
             activation="relu",
             padding="same",
@@ -125,7 +125,7 @@ class PARC(keras.Model):
             name="int_1_1",
         )
         self.int_res_block1_conv2 = keras.layers.Conv2D(
-            self.n_featuremaps/2,
+            self.n_featuremaps / 2,
             3,
             padding="same",
             kernel_initializer="he_normal",
@@ -170,7 +170,7 @@ class PARC(keras.Model):
             name="int_3_0",
         )
         self.int_res_block3_conv1 = keras.layers.Conv2D(
-            self.n_featuremaps/2,
+            self.n_featuremaps / 2,
             1,
             activation="relu",
             padding="same",
@@ -179,7 +179,7 @@ class PARC(keras.Model):
             name="int_3_1",
         )
         self.int_res_block3_conv2 = keras.layers.Conv2D(
-            self.n_featuremaps/4,
+            self.n_featuremaps / 4,
             1,
             activation="relu",
             padding="same",
@@ -200,7 +200,7 @@ class PARC(keras.Model):
 
         # shape descriptors (UNet)
         self.conv1_1 = keras.layers.Conv2D(
-            self.n_featuremaps/2,
+            self.n_featuremaps / 2,
             5,
             activation="relu",
             padding="same",
@@ -209,7 +209,7 @@ class PARC(keras.Model):
             name="unet_down_1_1",
         )
         self.conv1_2 = keras.layers.Conv2D(
-            self.n_featuremaps/2,
+            self.n_featuremaps / 2,
             5,
             activation="relu",
             padding="same",
@@ -238,7 +238,7 @@ class PARC(keras.Model):
         )
 
         self.conv3_1 = keras.layers.Conv2D(
-            self.n_featuremaps*2,
+            self.n_featuremaps * 2,
             5,
             activation="relu",
             padding="same",
@@ -247,7 +247,7 @@ class PARC(keras.Model):
             name="unet_down_3_1",
         )
         self.conv3_2 = keras.layers.Conv2D(
-            self.n_featuremaps*2,
+            self.n_featuremaps * 2,
             5,
             activation="relu",
             padding="same",
@@ -257,7 +257,7 @@ class PARC(keras.Model):
         )
 
         self.conv4 = keras.layers.Conv2D(
-            self.n_featuremaps*4,
+            self.n_featuremaps * 4,
             5,
             activation="relu",
             padding="same",
@@ -267,7 +267,7 @@ class PARC(keras.Model):
         )
 
         self.conv7_1 = keras.layers.Conv2D(
-            self.n_featuremaps*2,
+            self.n_featuremaps * 2,
             5,
             activation="relu",
             padding="same",
@@ -276,7 +276,7 @@ class PARC(keras.Model):
             name="unet_up_7_1",
         )
         self.conv7_2 = keras.layers.Conv2D(
-            self.n_featuremaps*2,
+            self.n_featuremaps * 2,
             5,
             activation="relu",
             padding="same",

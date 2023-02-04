@@ -6,6 +6,7 @@ import cv2
 import skimage
 from parc import IO
 
+
 def parse_data(dir_data: str, time_steps: int, del_t: int) -> np.ndarray:
     """parse the raw data and return numpy arrays with microstructure images and temp/pressure outputs
 
@@ -40,73 +41,75 @@ def parse_data(dir_data: str, time_steps: int, del_t: int) -> np.ndarray:
     initial_vals = np.zeros(
         (case_numbers, width, height, 2)
     )  # [0: temperature initial value, 1: pressure initial value]
-    
-    #create wave map
-    wave_map = IO.wave_map(width,height)
-    
+
+    # create wave map
+    wave_map = IO.wave_map(width, height)
+
     # iterate over cases
     for case_idx in range(1, case_numbers + 1):
         # Load Original Microstructure Image
         img_raw = osp.join(
             dir_data, "microstructures", "data_" + str(format(case_idx, "02d")) + ".pgm"
-        ).replace("\\","/")
+        ).replace("\\", "/")
         img = cv2.imread(img_raw)
         img = img[:, :, 1]
 
         # Combine Microstructure image and distance map
-        microstructure_data[case_idx-1, :, :, 0] = img
-        microstructure_data[case_idx-1, :, :, 1] = wave_map
-        #flip microstructure data to match temp/pressure data
-        microstructure_data[case_idx-1, :, :, 0] = np.flipud(microstructure_data[case_idx-1, :, :, 0])
+        microstructure_data[case_idx - 1, :, :, 0] = img
+        microstructure_data[case_idx - 1, :, :, 1] = wave_map
+        # flip microstructure data to match temp/pressure data
+        microstructure_data[case_idx - 1, :, :, 0] = np.flipud(
+            microstructure_data[case_idx - 1, :, :, 0]
+        )
 
-        #initialize temperature and pressure
+        # initialize temperature and pressure
         temp = np.full((width, height), 300.0)
         initial_vals[case_idx - 1, :, :, 0] = temp
         press = np.full((width, height), 0)
         initial_vals[case_idx - 1, :, :, 1] = press
-        
+
         # iterate over timestep for the fields:
-        for time_idx in range(1, time_steps+1):
+        for time_idx in range(1, time_steps + 1):
             dir_temperature = osp.join(
                 dir_data,
                 "temperatures",
                 "data_" + str(format(case_idx, "02d")),
                 "Temp_" + str(format(time_idx, "02d")) + ".txt",
-            ).replace("\\","/")
+            ).replace("\\", "/")
             temperature_img = np.loadtxt(dir_temperature)
             # reshape temp values to image size
             temp = np.reshape(temperature_img, (width, height))
             # clip the temperature value such that it ranges between 300K and 4000K
             temp = np.clip(temp, 300, 4000)
-            
-            #Swap the axis of error cases (temperature)
-            if 16 < case_idx < 23 : 
-                temp = np.swapaxes(temp,0,1)
 
-            output_data[case_idx - 1, :, :, time_idx-1, 0] = temp
+            # Swap the axis of error cases (temperature)
+            if 16 < case_idx < 23:
+                temp = np.swapaxes(temp, 0, 1)
+
+            output_data[case_idx - 1, :, :, time_idx - 1, 0] = temp
 
             dir_pressure = osp.join(
                 dir_data,
                 "pressures",
                 "data_" + str(format(case_idx, "02d")),
                 "pres_" + str(format(time_idx, "02d")) + ".txt",
-            ).replace("\\","/")
+            ).replace("\\", "/")
             pressure_img = np.loadtxt(dir_pressure)
             # reshape pressure values to image size
             pressure = np.reshape(pressure_img, (width, height))
-            
-            #Swap the axis of error cases (pressure)
-            if 16 < case_idx < 23 :
-                pressure = np.swapaxes(pressure,0,1)
-                
-            output_data[case_idx - 1, :, :, time_idx-1, 1] = pressure
+
+            # Swap the axis of error cases (pressure)
+            if 16 < case_idx < 23:
+                pressure = np.swapaxes(pressure, 0, 1)
+
+            output_data[case_idx - 1, :, :, time_idx - 1, 1] = pressure
 
             # Calculate T_dot --> T_dot = (T(t+del_t)-T(t))/del_t
-            currentT = output_data[case_idx - 1, :, :, time_idx-1, 0]
-            currentP = output_data[case_idx - 1, :, :, time_idx-1, 1]
+            currentT = output_data[case_idx - 1, :, :, time_idx - 1, 0]
+            currentP = output_data[case_idx - 1, :, :, time_idx - 1, 1]
             if time_idx == 1:
-                previousT = initial_vals[case_idx-1,:,:,0]
-                previousP = initial_vals[case_idx-1,:,:,1]
+                previousT = initial_vals[case_idx - 1, :, :, 0]
+                previousP = initial_vals[case_idx - 1, :, :, 1]
             else:
                 previousT = output_data[case_idx - 1, :, :, time_idx - 2, 0]
                 previousP = output_data[case_idx - 1, :, :, time_idx - 2, 1]
@@ -114,8 +117,8 @@ def parse_data(dir_data: str, time_steps: int, del_t: int) -> np.ndarray:
             Pdot = (currentP - previousP) / del_t
 
             # Save Tdot and Pdot into output data array
-            output_data[case_idx - 1, :, :, time_idx-1, 2] = Tdot
-            output_data[case_idx - 1, :, :, time_idx-1, 3] = Pdot
+            output_data[case_idx - 1, :, :, time_idx - 1, 2] = Tdot
+            output_data[case_idx - 1, :, :, time_idx - 1, 3] = Pdot
 
     # calculate max and min of fields
     T_max = np.amax(output_data[:, :, :, :, 0])
@@ -126,38 +129,36 @@ def parse_data(dir_data: str, time_steps: int, del_t: int) -> np.ndarray:
     Tdot_min = np.amin(output_data[:, :, :, :, 2])
     Pdot_max = np.amax(output_data[:, :, :, :, 3])
     Pdot_min = np.amin(output_data[:, :, :, :, 3])
-    
-    #create dictionary for the mins and maxs of the data fields
+
+    # create dictionary for the mins and maxs of the data fields
     normalizing_constants = {
-        'Pressure' : {
-            'min' : P_min, 
-            'max' : P_max,
-        }, 
-        'Temperature' : {
-            'min' : T_min,  
-            'max' : T_max,
+        "Pressure": {
+            "min": P_min,
+            "max": P_max,
         },
-        'Pressure_gradient' : {
-            'min' : Pdot_min, 
-            'max' : Pdot_max,
+        "Temperature": {
+            "min": T_min,
+            "max": T_max,
         },
-        'Temperature_gradient' : {
-            'min' : Tdot_min, 
-            'max' : Tdot_max,
+        "Pressure_gradient": {
+            "min": Pdot_min,
+            "max": Pdot_max,
+        },
+        "Temperature_gradient": {
+            "min": Tdot_min,
+            "max": Tdot_max,
         },
     }
-    
+
     # Normalize initial values to range [-1,1]
     for channel in range(0, 2):
         norm_max = np.amax(output_data[:, :, :, :, channel])
         norm_min = np.amin(output_data[:, :, :, :, channel])
-        initial_vals[:, :, :, channel] = (
-            initial_vals[:, :, :, channel] - norm_min
-        ) / (norm_max - norm_min)
-        initial_vals[:, :, :, channel] = (
-            initial_vals[:, :, :, channel] * 2.0
-        ) - 1.0
-        
+        initial_vals[:, :, :, channel] = (initial_vals[:, :, :, channel] - norm_min) / (
+            norm_max - norm_min
+        )
+        initial_vals[:, :, :, channel] = (initial_vals[:, :, :, channel] * 2.0) - 1.0
+
     # Normalize fields to range [-1,1]
     for channel in range(0, 4):
         norm_max = np.amax(output_data[:, :, :, :, channel])
@@ -190,7 +191,6 @@ def parse_data(dir_data: str, time_steps: int, del_t: int) -> np.ndarray:
     microstructure_data = microstructure_data[:, :480, :480, :]
     initial_vals = initial_vals[:, :480, :480, :]
 
-
     # downsample to half of image size
     output_data = skimage.measure.block_reduce(output_data, (1, 2, 2, 1, 1), np.max)
     microstructure_data = skimage.measure.block_reduce(
@@ -198,9 +198,7 @@ def parse_data(dir_data: str, time_steps: int, del_t: int) -> np.ndarray:
     )
     microstructure_data[:, :, :, :1] = microstructure_data[:, :, :, :1] > 0
     microstructure_data[:, :, :, :1] = (microstructure_data[:, :, :, :1] * 2.0) - 1.0
-    initial_vals = skimage.measure.block_reduce(
-        initial_vals, (1, 2, 2, 1), np.mean
-    )
+    initial_vals = skimage.measure.block_reduce(initial_vals, (1, 2, 2, 1), np.mean)
     initial_vals[:, :, :, :1] = initial_vals[:, :, :, :1] > 0
     initial_vals[:, :, :, :1] = (initial_vals[:, :, :, :1] * 2.0) - 1.0
 
@@ -209,6 +207,7 @@ def parse_data(dir_data: str, time_steps: int, del_t: int) -> np.ndarray:
     print("shape of output data is: ", output_data.shape)
 
     return microstructure_data, output_data, initial_vals, normalizing_constants
+
 
 def wave_map(width: int, height: int):
     """Generates Distance map (normalized distance from y-axis) where the size
@@ -226,6 +225,7 @@ def wave_map(width: int, height: int):
         wave_map[:, w] = w / width
     return wave_map
 
+
 def split_data(
     data_in: np.ndarray, output_data: np.ndarray, initial_vals: np.ndarray, splits: list
 ) -> np.ndarray:
@@ -241,16 +241,9 @@ def split_data(
         X_train, y_train, X_val, y_val, test_X, test_Y (np.ndarray): split data
     """
     case_numbers = len(output_data)
-    print(case_numbers)
-    train = case_numbers * splits[0]
-    valid = train + (case_numbers * splits[1])
-    test = valid + (case_numbers * splits[2])
-    train = int(train)
-    valid = int(valid)
-    test = int(test)
-    print(train)
-    print(valid)
-    print(test)
+    train = int(case_numbers * splits[0])
+    valid = int(train + (case_numbers * splits[1]))
+    test = int(valid + (case_numbers * splits[2]))
 
     # Training
     X_train = data_in[:train]
@@ -267,16 +260,17 @@ def split_data(
     test_Y = output_data[valid:test]
     test_X_init = initial_vals[valid:test]
 
-    print(X_train.shape)
-    print(y_train.shape)
-    print(X_train_init.shape)
-    print(X_val.shape)
-    print(y_val.shape)
-    print(X_val_init.shape)
-    print(test_X.shape)
-    print(test_Y.shape)
-    print(test_X_init.shape)
-    return X_train, y_train, X_train_init, X_val, y_val, X_val_init, test_X, test_Y, test_X_init
+    return (
+        X_train,
+        y_train,
+        X_train_init,
+        X_val,
+        y_val,
+        X_val_init,
+        test_X,
+        test_Y,
+        test_X_init,
+    )
 
 
 def reshape_old(new_data: np.ndarray, n_fields: int):
@@ -296,12 +290,15 @@ def reshape_old(new_data: np.ndarray, n_fields: int):
     for field_idx in range(n_fields):
         for case_idx in range(case_numbers):
             for time_idx in range(time_steps):
-                old_data[case_idx, :, :, ((n_fields * (time_idx)) + field_idx)] = new_data[
-                    case_idx, :, :, time_idx, (field_idx*2)
-                ]
-                old_data[case_idx, :, :, (time_steps * n_fields) + (n_fields * (time_idx)) + field_idx] = new_data[
-                    case_idx, :, :,time_idx, (field_idx*2)+1
-                ]
+                old_data[
+                    case_idx, :, :, ((n_fields * (time_idx)) + field_idx)
+                ] = new_data[case_idx, :, :, time_idx, (field_idx * 2)]
+                old_data[
+                    case_idx,
+                    :,
+                    :,
+                    (time_steps * n_fields) + (n_fields * (time_idx)) + field_idx,
+                ] = new_data[case_idx, :, :, time_idx, (field_idx * 2) + 1]
 
     print("Reformatted data shape: ", old_data.shape)
 
@@ -318,23 +315,29 @@ def reshape_new(old_data: np.ndarray, n_fields: int):
         new_data (np.ndarray): output data in 5 dimensional format
     """
     case_numbers = old_data.shape[0]
-    time_steps = int((old_data.shape[3]) / (n_fields*2))
+    time_steps = int((old_data.shape[3]) / (n_fields * 2))
     img_size = old_data.shape[2]
-    new_data = np.zeros((case_numbers, img_size, img_size, time_steps, (n_fields*2)))
+    new_data = np.zeros((case_numbers, img_size, img_size, time_steps, (n_fields * 2)))
     print("Starting shape of data: ", old_data.shape)
 
     for field_idx in range(n_fields):
         for case_idx in range(case_numbers):
             for time_idx in range(time_steps):
-                new_data[case_idx, :, :, time_idx, (field_idx*2)] = old_data[
-                    case_idx, :, :, ((n_fields * (time_idx)) + field_idx)]
-                new_data[case_idx, :, :,time_idx, (field_idx*2)+1] = old_data[
-                    case_idx, :, :, (time_steps * n_fields) + (n_fields * (time_idx)) + field_idx]
-    
+                new_data[case_idx, :, :, time_idx, (field_idx * 2)] = old_data[
+                    case_idx, :, :, ((n_fields * (time_idx)) + field_idx)
+                ]
+                new_data[case_idx, :, :, time_idx, (field_idx * 2) + 1] = old_data[
+                    case_idx,
+                    :,
+                    :,
+                    (time_steps * n_fields) + (n_fields * (time_idx)) + field_idx,
+                ]
+
     print("Reformatted data shape: ", new_data.shape)
 
     return new_data
-    
+
+
 def rescale(normalized_data: np.ndarray, norm_min: int, norm_max: int):
     """rescales data from normalized to full scale output
     Args:
@@ -344,11 +347,12 @@ def rescale(normalized_data: np.ndarray, norm_min: int, norm_max: int):
     Returns:
         rescaled (np.ndarray): unnormalized data
     """
-    rescaled = (normalized_data+1.0)/2.0
-    rescaled = (rescaled*(norm_max-norm_min))+norm_min
-    
+    rescaled = (normalized_data + 1.0) / 2.0
+    rescaled = (rescaled * (norm_max - norm_min)) + norm_min
+
     return rescaled
-    
+
+
 def calculate_derivative(input_data: np.ndarray, t_idx: list):
     """calculates the derivate for each time step in input data set
     Args:
@@ -357,13 +361,13 @@ def calculate_derivative(input_data: np.ndarray, t_idx: list):
     Returns:
         derivative (np.ndarray): derivative data
     """
-    derivative = np.zeros((input_data.shape[0],input_data.shape[1]-1))
+    derivative = np.zeros((input_data.shape[0], input_data.shape[1] - 1))
     for case_idx in range(input_data.shape[0]):
-        for time_idx in range(input_data.shape[1]-1):
-            current = input_data[case_idx,time_idx+1]
-            previous = input_data[case_idx,time_idx]
-            del_t = t_idx[time_idx+1] - t_idx[time_idx]
+        for time_idx in range(input_data.shape[1] - 1):
+            current = input_data[case_idx, time_idx + 1]
+            previous = input_data[case_idx, time_idx]
+            del_t = t_idx[time_idx + 1] - t_idx[time_idx]
             dot = (current - previous) / del_t
-            derivative[case_idx,time_idx] = dot
-        
+            derivative[case_idx, time_idx] = dot
+
     return derivative
