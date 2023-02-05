@@ -6,6 +6,7 @@ from parc import losses
 from parc import IO
 from matplotlib import animation
 
+
 def visualize_inference(
     y_true: np.ndarray,
     y_pred: np.ndarray,
@@ -306,14 +307,14 @@ def plot_saliency(y_pred: np.ndarray, cn: int, ts: int, threshold: int):
     ax = plt.gca()
     ax.set_xticks([])
     ax.set_yticks([])
-    
-    
-def animation_graph(    
+
+
+def animation_graph(
     y_true: np.ndarray,
     y_pred: np.ndarray,
     case_num: int,
     norm_min: int,
-    norm_max: int, 
+    norm_max: int,
 ):
     """creates and saves an animation of the inference results against the ground truth data
 
@@ -324,26 +325,39 @@ def animation_graph(
         norm_min (int): minimum value of the data set used to scale graphs
         norm_max (int): maximum value of the data set used to scale graphs
     """
-        
-    fig,ax = plt.subplots(1,2)
+
+    fig, ax = plt.subplots(1, 2)
+
     def iterator_img(i):
         ax[1].clear()
         ax[0].clear()
-        fig.suptitle("Case Number: " + str(case_num),fontsize = 18, y=0.9,x=0.5, color='black')
-        ax[1].set_title('Predicted Result', color='r')
-        ax[1].set_xlabel('Time step = '+str(i), color='r')
+        fig.suptitle(
+            "Case Number: " + str(case_num), fontsize=18, y=0.9, x=0.5, color="black"
+        )
+        ax[1].set_title("Predicted Result", color="r")
+        ax[1].set_xlabel("Time step = " + str(i), color="r")
         ax[1].set_xticks([])
         ax[1].set_yticks([])
-        ax[1].imshow(np.squeeze(y_pred[case_num,:,:,i]), cmap='jet',vmin=norm_min,vmax=norm_max)
-        ax[0].set_title('Ground Truth', color='r')
-        ax[0].set_xlabel('Time step = '+str(i), color='r')
+        ax[1].imshow(
+            np.squeeze(y_pred[case_num, :, :, i]),
+            cmap="jet",
+            vmin=norm_min,
+            vmax=norm_max,
+        )
+        ax[0].set_title("Ground Truth", color="r")
+        ax[0].set_xlabel("Time step = " + str(i), color="r")
         ax[0].set_xticks([])
         ax[0].set_yticks([])
-        ax[0].imshow(np.squeeze(y_true[case_num,:,:,i]), cmap='jet',vmin=norm_min,vmax=norm_max)
-        
+        ax[0].imshow(
+            np.squeeze(y_true[case_num, :, :, i]),
+            cmap="jet",
+            vmin=norm_min,
+            vmax=norm_max,
+        )
+
         return fig
 
-    ani = animation.FuncAnimation(fig, iterator_img, frames = 19, interval=300, blit=False, repeat_delay=1000)
-    ani.save('Sample '+str(case_num)+' Prediction.mp4', writer='ffmpeg')
-
-
+    ani = animation.FuncAnimation(
+        fig, iterator_img, frames=19, interval=300, blit=False, repeat_delay=1000
+    )
+    ani.save("Sample " + str(case_num) + " Prediction.mp4", writer="ffmpeg")
