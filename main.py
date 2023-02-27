@@ -5,10 +5,9 @@ from parc import graphs
 import keras
 import numpy as np
 
+# todo: link for the data set
 # initialize input data characteristics
-data_dir = (
-    "C:\\Users\\Austin Leonard\\parc_data\\data\\raw"  # input data file directory
-)
+data_dir = ".../data_raw"  # input data file directory
 case_numbers = 42  # number of cases
 del_t = 0.79  # time step size (ns)
 time_steps = 19  # desired time steps for data processing

@@ -377,7 +377,7 @@ def compare_field_evolution(
 
 
 def compare_sensitivity_plot(y_true, parc, unet, imaginator, metric):
-    """compare models by their sensitivity plots # todo: rephrase if needed
+    """compare models by their sensitivity plots
     :param y_true:      (tuple) [0] mean, [1] 5th percentile, [2] 95th percentile, [3] all values
     :param parc:        (tuple) same as above
     :param unet:        (tuple) same as above
@@ -505,16 +505,14 @@ def compute_saliency_map(cases, cases_init, model, case_idx, cut_off_val):
     state_init = cases_init[idx[0] : idx[1], :, :, :]
     with tf.GradientTape() as tape:
         tape.watch(microstructure)
-        pred = model(
-            [microstructure, state_init]
-        )  # todo: make better variable name. not sure what pred_smap mean
+        pred = model([microstructure, state_init])
         loss = -pred[0][:, :, :, 0]
         for i in range(2, 36, 2):  # todo: briefly mention what this iterates
             loss += -pred[0][:, :, :, i]
 
     gradient = tape.gradient(loss, microstructure)
 
-    # take maximum across channels # todo: this takes maximum?
+    # take maximum across channels
     gradient = gradient[:, :, :, 0]
     gradient = gradient.numpy()
 
