@@ -132,11 +132,9 @@ def calculate_hotspot_tempNarea(T_cases, cases_range, n_timesteps):
                         [2] (float) 95th percentile
                         [3] (numpy) hotspot area
     """
-
     # calculate average hotspot area and temperature across cases
     hotspot_areas, hotspot_temperatures = [], []
     for i in range(cases_range[0], cases_range[1]):
-
         hotspot_areas_i, hotspot_temperatures_i = _calculate_hotspot_tempNarea(
             T_cases[i, :, :, :], n_timesteps
         )
@@ -222,7 +220,7 @@ def calculate_hotspot_tempNarea_rateOfChange(T_cases, cases_range, n_timesteps):
     return rate_hs_temp, rate_hs_area
 
 
-def plot_sensitivity(y_true, y_pred, metric,ts):
+def plot_sensitivity(y_true, y_pred, metric, ts):
     """sensitivity plot comparing true and prediction
     :param y_true:  (tuple)
     :param y_pred:  (tuple)
@@ -232,7 +230,7 @@ def plot_sensitivity(y_true, y_pred, metric,ts):
     if metric == "hs_temp" or metric == "hs_area":
         ts = np.linspace(3.16, 15.01, ts)
     elif metric == "rate_hs_temp" or metric == "rate_hs_area":
-        ts = np.linspace(3.16, 14.22, ts-1)
+        ts = np.linspace(3.16, 14.22, ts - 1)
     else:
         print(
             "Wrong metric selection. Possible metrics are: 'hs_temp', 'hs_area', 'rate_hs_temp', 'rate_hs_area"

@@ -26,26 +26,26 @@ def compute_KLD(y_true, y_pred):
 
 
 def compute_quantitative_evaluation_sensitivity(y_trues, y_preds):
-    """ Calculate average rmse, kld, and pearson correlation value 
+    """Calculate average rmse, kld, and pearson correlation value
         across all time step of given sensitivity value derive from
         DNS (y_trues) w.r.t corresponding PARC predicted value (y_preds)
 
     :param y_trues: DNS ground truth sensitivity value
     :param y_preds: PARC predicted sensitivty value
-    :return [0]:    (float) average rsme 
-    :return [1]:    (float) average kld 
+    :return [0]:    (float) average rsme
+    :return [1]:    (float) average kld
     :return [2]:    (float) average pearson correlation
 
-    # """
+    #"""
 
     pcc_list = []
     rmse_list = []
-    kld_list = [] 
+    kld_list = []
     ts = y_preds.shape[1]
     for i in range(ts):
-        pcc = st.pearsonr(y_trues[:,i],y_preds[:,i])
-        temp_rmse =  sqrt(mean_squared_error(y_trues[:,i],y_preds[:,i]))
-        kld = compute_KLD(y_trues[:,i],y_preds[:,i])
+        pcc = st.pearsonr(y_trues[:, i], y_preds[:, i])
+        temp_rmse = sqrt(mean_squared_error(y_trues[:, i], y_preds[:, i]))
+        kld = compute_KLD(y_trues[:, i], y_preds[:, i])
         pcc_list.append(pcc[0])
         rmse_list.append(temp_rmse)
         kld_list.append(kld)
