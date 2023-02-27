@@ -36,3 +36,5 @@ cd parc
 ```
 
 ### Run Examples
+
+The details for using the PARC model is best described in the `demos/PARC_demo.ipynb`. 
