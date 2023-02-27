@@ -1,7 +1,6 @@
 numpy
 Pillow
 pandas
-math
 matplotlib
 scikit-image
 tensorflow
