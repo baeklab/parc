@@ -1,5 +1,7 @@
 # PARC: Physics-Aware Recurrent Convolutions
 
+Official implementation of [Nguyen et al. (2023). "PARC: Physics-Aware Recurrent Convolutional Neural Networks to Assimilate Meso-scale Reactive Mechanics of Energetic Materials"](https://arxiv.org/abs/2204.07234). 
+
 ## Getting Started
 
 ### Virtual Environment
