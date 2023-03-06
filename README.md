@@ -21,9 +21,28 @@ pip install tensorflow
 ```
 
 #### Other Dependencies
-If you have successfully configured TensorFlow2, installation of other dependencies can be as simple as running the following command.
+Matplotlib
 ```bash
-pip install -r requirements.txt
+pip install matplotlib
+```
+
+Scipy
+```bash
+pip install scipy
+```
+Scikit-learn
+```bash
+pip install scikit-learn
+```
+
+OpenCV
+```bash
+pip install opencv-python
+```
+
+Scikit-image
+```bash
+pip install scikit-image
 ```
 
 ### Clone This Repository
@@ -36,3 +55,5 @@ cd parc
 ```
 
 ### Run Examples
+
+The details for using the PARC model is best described in the `demos/PARC_demo.ipynb`. 
