@@ -1,6 +1,7 @@
 # PARC: Physics-Aware Recurrent Convolutions
+<a href="https://arxiv.org/abs/2204.07234"><img src="https://img.shields.io/badge/cond.mat-arXiv%3A2204.07234-B31B1B.svg"></a>
 
-Official implementation of [Nguyen et al. (2023). "PARC: Physics-Aware Recurrent Convolutional Neural Networks to Assimilate Meso-scale Reactive Mechanics of Energetic Materials"](https://arxiv.org/abs/2204.07234). 
+Official implementation of [Nguyen et al. (2023). "PARC: Physics-Aware Recurrent Convolutional Neural Networks to Assimilate Meso-scale Reactive Mechanics of Energetic Materials," arXiv preprint: 2204.07234](https://arxiv.org/abs/2204.07234). 
 
 ## Getting Started
 
