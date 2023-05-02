@@ -1,7 +1,9 @@
 # PARC: Physics-Aware Recurrent Convolutions
 <a href="https://arxiv.org/abs/2204.07234"><img src="https://img.shields.io/badge/cond.mat-arXiv%3A2204.07234-B31B1B.svg"></a>
+<a href="https://arxiv.org/abs/2211.04561"><img src="https://img.shields.io/badge/cond.mat-arXiv%3A2211.04561-B31B1B.svg"></a>
 
-Official implementation of [Nguyen et al. (2023). "PARC: Physics-Aware Recurrent Convolutional Neural Networks to Assimilate Meso-scale Reactive Mechanics of Energetic Materials," arXiv preprint: 2204.07234](https://arxiv.org/abs/2204.07234). 
+
+Official implementation of [Nguyen, P.C.H., Nguyen, Y.T., Choi, J.B., Seshadri, P., Udaykumar, H.S., & Baek, S.S. (2023). PARC: Physics-Aware Recurrent Convolutional Neural Networks to Assimilate Meso-scale Reactive Mechanics of Energetic Materials. *Science Advances, 9*(17):eadd6868.](https://www.science.org/doi/10.1126/sciadv.add6868)
 
 ## Getting Started
 
@@ -24,28 +26,8 @@ pip install tensorflow
 ```
 
 #### Other Dependencies
-Matplotlib
 ```bash
-pip install matplotlib
-```
-
-Scipy
-```bash
-pip install scipy
-```
-Scikit-learn
-```bash
-pip install scikit-learn
-```
-
-OpenCV
-```bash
-pip install opencv-python
-```
-
-Scikit-image
-```bash
-pip install scikit-image
+pip install -r requirements.txt
 ```
 
 ### Clone This Repository
@@ -60,3 +42,37 @@ cd parc
 ### Run Examples
 
 The details for using the PARC model is best described in the `demos/PARC_demo.ipynb`. 
+
+## Citation
+To cite this work, please use the following:
+```
+@article{
+  nguyen2023parc,
+  author = {Phong C. H. Nguyen  and Yen-Thi Nguyen  and Joseph B. Choi
+   and Pradeep K. Seshadri  and H. S. Udaykumar  and Stephen S. Baek },
+  title = {{PARC}: Physics-aware recurrent convolutional neural networks to
+   assimilate meso scale reactive mechanics of energetic materials},
+  journal = {Science Advances},
+  volume = {9},
+  number = {17},
+  pages = {eadd6868},
+  year = {2023},
+  doi = {10.1126/sciadv.add6868},
+  URL = {https://www.science.org/doi/abs/10.1126/sciadv.add6868}
+}
+
+@article{
+  nguyen2023parcel,
+  author = {Phong C. H. Nguyen and Yen-Thi Nguyen and Pradeep K. Seshadri
+   and Joseph B. Choi and H. S. Udaykumar and Stephen Baek},
+  title = {A Physics-Aware Deep Learning Model for Energy Localization in
+   Multiscale Shock-To-Detonation Simulations of Heterogeneous Energetic Materials},
+  journal = {Propellants, Explosives, Pyrotechnics},
+  volume = {48},
+  number = {4},
+  pages = {e202200268},
+  year = {2023},
+  doi = {https://doi.org/10.1002/prep.202200268},
+  url = {https://onlinelibrary.wiley.com/doi/abs/10.1002/prep.202200268}
+}
+```
