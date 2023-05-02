@@ -1,7 +1,10 @@
 numpy
+scipy
 Pillow
 pandas
 matplotlib
 scikit-image
+scikit-learn
+opencv-python
 tensorflow
 keras
