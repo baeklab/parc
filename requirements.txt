@@ -8,3 +8,4 @@ scikit-learn
 opencv-python
 tensorflow
 keras
+python>=3.8
